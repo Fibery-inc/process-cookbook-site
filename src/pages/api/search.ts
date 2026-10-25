@@ -9,15 +9,15 @@ const headers = {
   'Cache-Control': 'public, max-age=60, s-maxage=300',
 };
 
+// GET /api/search?q=&domain=&for=&limit=&debug=1. Without q it lists recipes (a browse); debug adds the matched terms.
 export const GET: APIRoute = ({ url }) => {
-  const q = url.searchParams.get('q') || '';
-  if (!q.trim()) {
-    return new Response(JSON.stringify({ error: 'q is required', example: '/api/search?q=volunteer+cats' }), { status: 400, headers });
-  }
-  const result = findRecipes(q, {
-    domain: url.searchParams.get('domain') || undefined,
-    for: url.searchParams.get('for') || undefined,
-    limit: Number(url.searchParams.get('limit') || 5),
+  const p = url.searchParams;
+  const limit = Number(p.get('limit'));
+  const result = findRecipes(p.get('q') || '', {
+    domain: p.get('domain') || undefined,
+    for: p.get('for') || undefined,
+    limit: Number.isFinite(limit) && limit > 0 ? limit : undefined,
+    debug: p.get('debug') === '1',
   });
   return new Response(JSON.stringify(result), { headers });
 };

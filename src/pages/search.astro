@@ -20,24 +20,18 @@ const list = domains();
   </section>
 
   <script>
-    import MiniSearch from 'minisearch';
+    import { makeIndex, search } from '../lib/search';
     const FOR: Record<string, string> = { solo: 'for one person', team: 'for a team', company: 'for a company', community: 'for a community' };
     const form = document.getElementById('sf') as HTMLFormElement;
     const q = document.getElementById('q') as HTMLInputElement;
     const domainSel = document.getElementById('domain') as HTMLSelectElement;
     const status = document.getElementById('status')!;
     const results = document.getElementById('results')!;
-    let index: MiniSearch | null = null;
+    let index: ReturnType<typeof makeIndex> | null = null;
 
     async function load() {
       const docs = await fetch('/search-index.json').then((r) => r.json());
-      index = new MiniSearch({
-        fields: ['title', 'keywords', 'summary', 'promise', 'text'],
-        storeFields: ['id', 'title', 'summary', 'domain', 'for', 'version', 'updated'],
-        searchOptions: { boost: { title: 4, keywords: 3, summary: 2, promise: 1.5 }, prefix: true, fuzzy: 0.2, combineWith: 'AND' },
-        extractField: (doc: any, field: string) => (Array.isArray(doc[field]) ? doc[field].join(' ') : doc[field]),
-      });
-      index.addAll(docs);
+      index = makeIndex(docs);
     }
 
     function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!)); }
@@ -51,10 +45,7 @@ const list = domains();
       domain ? url.searchParams.set('domain', domain) : url.searchParams.delete('domain');
       history.replaceState(null, '', url);
       if (!text) { results.innerHTML = ''; status.textContent = 'Type to search. Results update as you type.'; return; }
-      let hits = index.search(text);
-      if (hits.length === 0) hits = index.search(text, { combineWith: 'OR' });
-      if (domain) hits = hits.filter((h) => h.domain === domain);
-      hits = hits.slice(0, 20);
+      const hits = search(index, text, { domain: domain || undefined, limit: 20 });
       status.textContent = hits.length ? `${hits.length} recipe${hits.length === 1 ? '' : 's'} for “${text}”` : `Nothing for “${text}” yet.`;
       results.innerHTML = hits.length
         ? hits.map((h) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span><span>v${h.version}</span></span></a>`).join('')

@@ -22,10 +22,12 @@ npm run build      # fetches, then builds to .vercel/output
 | `/r/<id>` | A recipe page; `/r/<id>.md` is the recipe file itself |
 | `/d/<domain>`, `/domains`, `/recipes`, `/collections/<id>` | Browsing |
 | `/search?q=` | Search in the browser (MiniSearch over `search-index.json`) |
-| `/api/search?q=&domain=&for=&limit=` | The same search as JSON, for agents and other sites |
-| `/api/recipes/<id>?part=human\|build\|all` | One recipe as JSON with its Markdown |
-| `/api/domains` | Domains with counts |
-| `/mcp` | MCP (streamable HTTP, no sign-in): `find_recipes`, `get_recipe`, `list_domains` |
+| `/api/search?q=&domain=&for=&limit=` | The same search as JSON, for agents and other sites; without `q` it lists recipes; `&debug=1` adds the matched terms |
+| `/api/recipes/<id>?part=human\|build\|all` | One recipe as JSON with its Markdown (frontmatter folded into the fields) |
+| `/api/domains` | Domains with counts and their recipes |
+| `/mcp` | MCP (streamable HTTP, no sign-in): `find_recipes` (search, or browse without a query), `get_recipe`, `list_domains` |
+
+Search is MiniSearch (BM25) over title, keywords, summary, the promise line and the human sections, with stopwords dropped, plurals folded, prefix matching from four letters and fuzzy matching from five; a result `fits` when most of the query's content words are in the best hit and at least half of them in its header fields, or the hit leaves the runner-up far behind.
 | `/llms.txt`, `/sitemap-index.xml`, `/robots.txt` | For crawlers and assistants |
 
 Requested recipes are GitHub issues on the cookbook labelled `recipe request`; 👍 reactions are the votes. The build reads them from the GitHub API.

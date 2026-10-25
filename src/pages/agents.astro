@@ -8,13 +8,13 @@ const site = Astro.site?.toString().replace(/\/$/, '') || '';
     <p class="muted" style="font-size: 17px; margin-bottom: 28px;">The same index that powers search here is open to any agent, with no sign-in.</p>
     <div class="article" style="max-width: none;">
       <h2 style="font-size: 22px;">MCP</h2>
-      <p>Streamable HTTP at <code>{site}/mcp</code>. Tools: <code>find_recipes</code> (query, optional domain, for, limit), <code>get_recipe</code> (id, optional part: human, build or all) and <code>list_domains</code>. Add it to Claude as a custom connector, or to any MCP client by URL.</p>
+      <p>Streamable HTTP at <code>{site}/mcp</code>. Tools: <code>find_recipes</code> (query, optional domain, for, limit; without a query it lists the shelf), <code>get_recipe</code> (id, optional part: human, build or all) and <code>list_domains</code> (every domain with its recipes: id, title, summary). A search answers with <code>fits</code>: false means the words matched something, but not what the recipe says it is. Add it to Claude as a custom connector, or to any MCP client by URL.</p>
       <h2 style="font-size: 22px;">REST</h2>
       <ul>
-        <li><code>GET /api/search?q=volunteer+cats&amp;domain=nonprofit&amp;limit=5</code>: ranked matches as JSON.</li>
-        <li><code>GET /api/recipes/tnr-program</code>: one recipe as JSON, with its Markdown.</li>
+        <li><code>GET /api/search?q=volunteer+cats&amp;domain=nonprofit&amp;limit=5</code>: ranked matches as JSON; without <code>q</code>, the recipes of a domain or of everyone; <code>&amp;debug=1</code> adds the words searched and the terms each hit matched.</li>
+        <li><code>GET /api/recipes/tnr-program?part=human|build|all</code>: one recipe as JSON, with its Markdown.</li>
         <li><code>GET /r/tnr-program.md</code>: the recipe file itself.</li>
-        <li><code>GET /api/domains</code>: domains with counts.</li>
+        <li><code>GET /api/domains</code>: domains with counts and their recipes.</li>
         <li><code>GET /llms.txt</code>: the whole library as a list an agent can read in one go.</li>
       </ul>
       <h2 style="font-size: 22px;">Rules</h2>
