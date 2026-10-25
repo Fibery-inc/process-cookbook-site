@@ -1,0 +1,97 @@
+---
+import '../styles/global.css';
+import { meta } from '../lib/recipes';
+
+interface Props {
+  title: string;
+  description: string;
+  current?: 'recipes' | 'domains' | 'collections' | 'requested' | 'contribute';
+  canonical?: string;
+  jsonLd?: object;
+  ogType?: string;
+}
+const { title, description, current, canonical, jsonLd, ogType = 'website' } = Astro.props;
+const site = Astro.site?.toString().replace(/\/$/, '') || '';
+const url = canonical || new URL(Astro.url.pathname, Astro.site || 'https://processcookbook.org').toString();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:site_name" content="Process Cookbook" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/">
+          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="7" fill="#1b1611"></rect><rect x="7" y="8" width="12" height="2.2" rx="1.1" fill="#fffdfb"></rect><rect x="7" y="12.4" width="9" height="2.2" rx="1.1" fill="#fffdfb"></rect><rect x="7" y="16.8" width="6" height="2.2" rx="1.1" fill="#fffdfb"></rect></svg>
+          Process Cookbook
+        </a>
+        <nav class="nav" aria-label="Main">
+          <a href="/recipes" aria-current={current === 'recipes' ? 'page' : undefined}>Recipes</a>
+          <a href="/domains" aria-current={current === 'domains' ? 'page' : undefined}>Domains</a>
+          <a href="/#collections" aria-current={current === 'collections' ? 'page' : undefined}>Collections</a>
+          <a href="/#requested" aria-current={current === 'requested' ? 'page' : undefined}>Requested</a>
+          <a href="/contribute" aria-current={current === 'contribute' ? 'page' : undefined}>Contribute</a>
+        </nav>
+        <div class="header-right">
+          <form action="/search" method="get" role="search">
+            <label class="sr-only" for="hq">Search a process</label>
+            <input class="input" id="hq" name="q" type="search" placeholder="Search a process…" style="height: 36px; width: 220px; font-size: 14px; border-radius: 8px;" />
+          </form>
+          <a class="btn sm" href="https://github.com/Fibery-inc/process-cookbook">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-about">
+          <div class="brand" style="font-size: 15px;">
+            <svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="7" fill="#1b1611"></rect><rect x="7" y="8" width="12" height="2.2" rx="1.1" fill="#fffdfb"></rect><rect x="7" y="12.4" width="9" height="2.2" rx="1.1" fill="#fffdfb"></rect><rect x="7" y="16.8" width="6" height="2.2" rx="1.1" fill="#fffdfb"></rect></svg>
+            Process Cookbook
+          </div>
+          <p style="max-width: 420px;">An open library of how companies, teams and communities run things. Every recipe is licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: copy, adapt and build it anywhere, crediting the cookbook.</p>
+          <p>An open project maintained by <a class="fibery-link" href="https://fibery.com">Fibery</a>.</p>
+          <p class="faint small">{meta.count} recipes · built from <a href={`https://github.com/Fibery-inc/process-cookbook/commit/${meta.commit}`} class="faint">{meta.commit.slice(0, 7)}</a></p>
+        </div>
+        <div class="footer-col">
+          <p class="eyebrow">Library</p>
+          <a href="/recipes">Recipes</a>
+          <a href="/domains">Domains</a>
+          <a href="/#collections">Collections</a>
+          <a href="/#requested">Requested</a>
+        </div>
+        <div class="footer-col">
+          <p class="eyebrow">Contribute</p>
+          <a href="https://github.com/Fibery-inc/skills">The recipe-writer skill</a>
+          <a href="https://github.com/Fibery-inc/process-cookbook/blob/main/FORMAT.md">The recipe format</a>
+          <a href="https://github.com/Fibery-inc/process-cookbook">GitHub</a>
+        </div>
+        <div class="footer-col">
+          <p class="eyebrow">For agents</p>
+          <a href="/agents">MCP endpoint</a>
+          <a href="/llms.txt">llms.txt</a>
+          <a href="/api/search?q=volunteer">REST search</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

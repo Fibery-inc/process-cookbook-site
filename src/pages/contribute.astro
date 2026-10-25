@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Contribute a recipe · Process Cookbook" description="Write a recipe with the recipe-writer skill or by hand, open a pull request, and it goes live under your name." current="contribute">
+  <section class="section wrap" style="padding-bottom: 80px; max-width: 820px;">
+    <h2 style="font-size: 30px; margin-bottom: 12px;">Contribute a recipe</h2>
+    <p class="muted" style="font-size: 17px; margin-bottom: 28px;">A recipe is one Markdown file: the process in plain words, the model to build it in any tool, and the sources it was written from. Anyone can add one.</p>
+
+    <div class="article" style="max-width: none;">
+      <h2 style="font-size: 22px;">With the recipe-writer skill</h2>
+      <ol>
+        <li>Add the <a href="https://github.com/Fibery-inc/skills">recipe-writer skill</a> to Claude or another AI assistant that takes skills.</li>
+        <li>Tell it how your group runs the process, or point it at a method's book or a public guide. It asks a few questions to pin down the scope.</li>
+        <li>It writes the recipe in the <a href="https://github.com/Fibery-inc/process-cookbook/blob/main/FORMAT.md">cookbook's format</a>, with one to three sources, and opens a pull request on <a href="https://github.com/Fibery-inc/process-cookbook">process-cookbook</a>.</li>
+        <li>The checks run on the pull request; a reviewer reads it as the person who would run the process. Merged, it is live here within minutes, under your name.</li>
+      </ol>
+      <h2 style="font-size: 22px;">By hand</h2>
+      <p>Copy any recipe, follow <a href="https://github.com/Fibery-inc/process-cookbook/blob/main/FORMAT.md">FORMAT.md</a>, run <code>python3 scripts/check.py</code>, and open a pull request. <a href="https://github.com/Fibery-inc/process-cookbook/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> has the details: one recipe per pull request, written from one to three published sources.</p>
+      <h2 style="font-size: 22px;">Requests</h2>
+      <p>Not sure what to write? The <a href="/#requested">Requested recipes</a> board lists what people searched for and didn't find, most wanted first.</p>
+    </div>
+  </section>
+</Base>

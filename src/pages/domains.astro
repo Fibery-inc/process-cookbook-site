@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import { domains, byDomain, domainLabel, meta } from '../lib/recipes';
+const list = domains();
+---
+<Base title="Domains · Process Cookbook" description="The cookbook's domains, from software and sales to manufacturing, esports and nonprofits." current="domains">
+  <section class="section wrap" style="padding-bottom: 80px;">
+    <div class="section-head">
+      <div>
+        <h2>Domains</h2>
+        <p class="intro">{list.length} domains with recipes today. A domain the cookbook lacks is added with its first recipe.</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      {list.map((d) => {
+        const rs = byDomain(d);
+        return (
+          <a class="card" href={`/d/${d}`}>
+            <div class="card-body">
+              <span class="tag" data-domain={d} style="align-self: flex-start;">{d}</span>
+              <h3>{domainLabel(d)}</h3>
+              <p class="small muted">{rs.map((r) => r.title).join(' · ')}</p>
+              <p class="foot">{rs.length} recipe{rs.length === 1 ? '' : 's'}</p>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import { domains } from '../lib/recipes';
+const list = domains();
+---
+<Base title="Search · Process Cookbook" description="Search the Process Cookbook by process, method, role or domain." current="recipes">
+  <section class="section wrap" style="padding-bottom: 80px; max-width: 900px;">
+    <h2 style="font-size: 30px; margin-bottom: 16px;">Search</h2>
+    <form id="sf" role="search" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+      <label class="sr-only" for="q">Search a process</label>
+      <input class="input" id="q" name="q" type="search" autofocus placeholder="A process, a method, a role: cat rescue, six-week cycles, repair orders…" style="flex: 1 1 380px; min-width: 0; height: 52px; font-size: 16px;" />
+      <select class="input" id="domain" name="domain" style="height: 52px;">
+        <option value="">Any domain</option>
+        {list.map((d) => <option value={d}>{d}</option>)}
+      </select>
+      <button class="btn solid lg" type="submit">Search</button>
+    </form>
+    <p id="status" class="small muted" style="margin-bottom: 16px;">Type to search. Results update as you type.</p>
+    <div id="results" class="results"></div>
+  </section>
+
+  <script>
+    import MiniSearch from 'minisearch';
+    const FOR: Record<string, string> = { solo: 'for one person', team: 'for a team', company: 'for a company', community: 'for a community' };
+    const form = document.getElementById('sf') as HTMLFormElement;
+    const q = document.getElementById('q') as HTMLInputElement;
+    const domainSel = document.getElementById('domain') as HTMLSelectElement;
+    const status = document.getElementById('status')!;
+    const results = document.getElementById('results')!;
+    let index: MiniSearch | null = null;
+
+    async function load() {
+      const docs = await fetch('/search-index.json').then((r) => r.json());
+      index = new MiniSearch({
+        fields: ['title', 'keywords', 'summary', 'promise', 'text'],
+        storeFields: ['id', 'title', 'summary', 'domain', 'for', 'version', 'updated'],
+        searchOptions: { boost: { title: 4, keywords: 3, summary: 2, promise: 1.5 }, prefix: true, fuzzy: 0.2, combineWith: 'AND' },
+        extractField: (doc: any, field: string) => (Array.isArray(doc[field]) ? doc[field].join(' ') : doc[field]),
+      });
+      index.addAll(docs);
+    }
+
+    function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!)); }
+
+    function run() {
+      if (!index) return;
+      const text = q.value.trim();
+      const domain = domainSel.value;
+      const url = new URL(location.href);
+      text ? url.searchParams.set('q', text) : url.searchParams.delete('q');
+      domain ? url.searchParams.set('domain', domain) : url.searchParams.delete('domain');
+      history.replaceState(null, '', url);
+      if (!text) { results.innerHTML = ''; status.textContent = 'Type to search. Results update as you type.'; return; }
+      let hits = index.search(text);
+      if (hits.length === 0) hits = index.search(text, { combineWith: 'OR' });
+      if (domain) hits = hits.filter((h) => h.domain === domain);
+      hits = hits.slice(0, 20);
+      status.textContent = hits.length ? `${hits.length} recipe${hits.length === 1 ? '' : 's'} for “${text}”` : `Nothing for “${text}” yet.`;
+      results.innerHTML = hits.length
+        ? hits.map((h) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span><span>v${h.version}</span></span></a>`).join('')
+        : `<div class="empty">No recipe matches yet. <a href="https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request&title=Recipe%20request%3A%20${encodeURIComponent(text)}">Request “${esc(text)}”</a> and it goes on the board, or <a href="/contribute">write it</a>.</div>`;
+    }
+
+    form.addEventListener('submit', (e) => { e.preventDefault(); run(); });
+    q.addEventListener('input', run);
+    domainSel.addEventListener('change', run);
+    const params = new URLSearchParams(location.search);
+    q.value = params.get('q') || '';
+    domainSel.value = params.get('domain') || '';
+    load().then(run);
+  </script>
+</Base>

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vercel/
+.astro/
+.cookbook/
+src/data/recipes.json
+src/data/meta.json
+src/data/requests.json
+public/search-index.json
+.env*

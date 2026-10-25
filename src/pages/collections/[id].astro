@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import RecipeCard from '../../components/RecipeCard.astro';
+import { byId } from '../../lib/recipes';
+import collections from '../../data/collections.json';
+
+export function getStaticPaths() {
+  return collections.map((c) => ({ params: { id: c.id }, props: { collection: c } }));
+}
+const { collection: c } = Astro.props;
+const items = c.recipes.map((id) => byId(id)).filter(Boolean);
+---
+<Base title={`${c.title} · Process Cookbook`} description={c.blurb} current="collections">
+  <section class="section wrap" style="padding-bottom: 80px;">
+    <nav class="crumbs" aria-label="Breadcrumb" style="margin-bottom: 16px;"><a href="/#collections">Collections</a><span>/</span><span style="color: var(--ink);">{c.title}</span></nav>
+    <div class="section-head">
+      <div>
+        <h2>{c.title}</h2>
+        <p class="intro">{c.blurb}</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      {items.map((r) => <RecipeCard recipe={r!} />)}
+    </div>
+  </section>
+</Base>

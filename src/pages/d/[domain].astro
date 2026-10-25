@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import RecipeCard from '../../components/RecipeCard.astro';
+import { domains, byDomain, domainLabel } from '../../lib/recipes';
+
+export function getStaticPaths() {
+  return domains().map((d) => ({ params: { domain: d } }));
+}
+const { domain } = Astro.params;
+const rs = byDomain(domain!);
+---
+<Base title={`${domainLabel(domain!)} recipes · Process Cookbook`} description={`How ${domainLabel(domain!).toLowerCase()} teams run things: ${rs.map((r) => r.title).join(', ')}.`} current="domains">
+  <section class="section wrap" style="padding-bottom: 80px;">
+    <nav class="crumbs" aria-label="Breadcrumb" style="margin-bottom: 16px;"><a href="/domains">Domains</a><span>/</span><span style="color: var(--ink);">{domainLabel(domain!)}</span></nav>
+    <div class="section-head">
+      <div>
+        <h2>{domainLabel(domain!)}</h2>
+        <p class="intro">{rs.length} recipe{rs.length === 1 ? '' : 's'}. Missing one? <a href="/#requested">Request it</a> or <a href="/contribute">write it</a>.</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      {rs.map((r) => <RecipeCard recipe={r} />)}
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import { recipes, meta } from '../lib/recipes';
+const sorted = [...recipes].sort((a, b) => (a.updated! < b.updated! ? 1 : a.updated! > b.updated! ? -1 : a.title.localeCompare(b.title)));
+---
+<Base title="All recipes · Process Cookbook" description={`All ${meta.count} recipes in the Process Cookbook, newest first.`} current="recipes">
+  <section class="section wrap" style="padding-bottom: 80px;">
+    <div class="section-head">
+      <div>
+        <h2>All recipes</h2>
+        <p class="intro">{meta.count} recipes, newest change first. Each one is the process in plain words, the model to build it, and the sources it was written from.</p>
+      </div>
+      <a class="small" style="font-weight: 500;" href="/domains">Browse by domain →</a>
+    </div>
+    <div class="grid-3">
+      {sorted.map((r) => <RecipeCard recipe={r} />)}
+    </div>
+  </section>
+</Base>

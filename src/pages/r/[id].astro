@@ -1,0 +1,175 @@
+---
+import Base from '../../layouts/Base.astro';
+import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel } from '../../lib/recipes';
+import { render } from '../../lib/markdown';
+
+export function getStaticPaths() {
+  return recipes.map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
+}
+const { recipe: r } = Astro.props;
+
+const human = ['The idea', 'How it runs', 'What people look at', 'The rules', 'What must stay true', 'Making it yours'];
+const slug = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const sections = human.filter((h) => r.sections[h]).map((h) => ({ h, id: slug(h), html: render(r.sections[h]) }));
+const details = r.sections['Details for building'] ? render(r.sections['Details for building']) : '';
+const sources = r.sections['Sources'] ? render(r.sections['Sources']) : '';
+const sourcesCount = (r.sections['Sources'] || '').split('\n').filter((l) => l.trim().startsWith('- ')).length;
+const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
+const creditHtml = r.footer ? render(r.footer) : '';
+const related = byDomain(r.domain).filter((x) => x.id !== r.id).slice(0, 3);
+const fallback = recipes.filter((x) => x.id !== r.id && x.for === r.for).slice(0, 3 - related.length);
+const relatedAll = [...related, ...fallback];
+const site = Astro.site?.toString().replace(/\/$/, '') || '';
+const pageUrl = `${site}/r/${r.id}`;
+const mdUrl = `${site}/r/${r.id}.md`;
+const prompt = `Set up the process described at ${mdUrl} in my tool. Read the recipe first; if I use Fibery, use the Fibery plugin.`;
+const claudeUrl = `https://claude.ai/new?q=${encodeURIComponent(prompt)}`;
+const chatgptUrl = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
+const description = r.summary;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: `${r.title}: how ${r.for === 'community' ? 'groups' : r.for === 'company' ? 'companies' : 'teams'} run it`,
+  description,
+  url: pageUrl,
+  dateModified: r.updated,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  isAccessibleForFree: true,
+  publisher: { '@type': 'Organization', name: 'Process Cookbook', url: site },
+  keywords: r.keywords.join(', '),
+  about: domainLabel(r.domain),
+};
+---
+<Base title={`${r.title}: how ${r.for === 'community' ? 'groups' : r.for === 'company' ? 'companies' : 'teams'} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
+  <section class="title-block">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><span style="color: var(--ink);">{r.title}</span>
+      </nav>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+        <a class="tag" data-domain={r.domain} href={`/d/${r.domain}`}>{r.domain}</a>
+        <span class="tag plain">{FOR_LABELS[r.for] || r.for}</span>
+      </div>
+      <h1>{r.title}</h1>
+      <p class="promise" set:html={promiseHtml} />
+      <p class="meta">
+        <span>Version {r.version} · updated {formatDate(r.updated)}</span>
+        <a class="gh" href={r.github}>
+          <svg width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="GitHub"><circle cx="4" cy="3.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="4" cy="12.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="12" cy="5.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M4 5.3v5.4M12 7.3c0 2.2-2 3-5 3.3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
+          Source and history on GitHub
+        </a>
+        <a href={`/r/${r.id}.md`}>Markdown</a>
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap recipe-body">
+    <article class="article">
+      {sections.map((s) => (
+        <section id={s.id}>
+          <h2>{s.h}</h2>
+          <Fragment set:html={s.html} />
+        </section>
+      ))}
+
+      {details && (
+        <section id="details-for-building" class="details" style="margin-top: 44px;">
+          <h2>Details for building</h2>
+          <Fragment set:html={details} />
+        </section>
+      )}
+
+      {sources && (
+        <section id="sources">
+          <h2>Sources</h2>
+          <Fragment set:html={sources} />
+        </section>
+      )}
+
+      <section id="build-it" class="build" style="margin-top: 44px;">
+        <h2>Build it</h2>
+        <p>Pick your tool in the Run it box: Airtable, Fibery, Lovable, Notion or another one. Give this recipe to your AI assistant with that tool connected and it sets the process up from Details for building; or build it by hand from the same section.</p>
+        <p>The story above is enough to run the process without any tool at all.</p>
+        {creditHtml && <div class="credit" set:html={creditHtml} />}
+      </section>
+    </article>
+
+    <aside class="rail">
+      <div class="runit" id="run-it">
+        <div class="head">
+          <h2>Run it in your tool</h2>
+          <span class="small faint">and more</span>
+        </div>
+        <div class="tools" role="group" aria-label="Pick a tool">
+          <button type="button" data-tool="fibery" aria-pressed="true">Fibery</button>
+          <button type="button" data-tool="airtable" aria-pressed="false">Airtable</button>
+          <button type="button" data-tool="notion" aria-pressed="false">Notion</button>
+          <button type="button" data-tool="lovable" aria-pressed="false">Lovable</button>
+          <button type="button" data-tool="other" aria-pressed="false">Another tool</button>
+        </div>
+        <p class="note" data-note="fibery">Open Claude with the Fibery plugin, attach this recipe and say "set up {r.title}". It asks a few questions, then builds the whole thing in about ten minutes: the databases, the views, the rules and sample records to play with.</p>
+        <p class="note" data-note="airtable" hidden>Give this recipe to Claude or ChatGPT with Airtable connected. It builds the base from Details for building: one table per database with linked records, then the views. Where a custom app is described, it falls back to the view the recipe names.</p>
+        <p class="note" data-note="notion" hidden>Give this recipe to Claude or ChatGPT with Notion connected. Databases become Notion databases with relations and rollups; rules become reminders and templates; a custom app falls back to the view the recipe names.</p>
+        <p class="note" data-note="lovable" hidden>Paste this recipe into Lovable and ask for an app from Details for building: the tables, the main views as pages, the rules as app logic. Good when the group never wants to open a work tool.</p>
+        <p class="note" data-note="other" hidden>Give this recipe to your AI assistant and name your tool, or build it by hand from Details for building. Types, states and formulas are written in words most tools can map, and the story above is enough to run the process on paper.</p>
+        <div class="row">
+          <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
+          <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener">With ChatGPT</a>
+        </div>
+        <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
+        <div class="links">
+          <a href={`/r/${r.id}.md`}>Copy as Markdown</a>
+          <a href={r.github}>View on GitHub</a>
+          <a href={r.raw}>Raw file</a>
+        </div>
+      </div>
+
+      <nav class="toc" aria-label="On this page">
+        <p class="eyebrow" style="margin-bottom: 4px;">On this page</p>
+        {sections.map((s) => <a href={`#${s.id}`}>{s.h}</a>)}
+        {details && <a href="#details-for-building">Details for building</a>}
+        {sources && <a href="#sources">Sources</a>}
+        <a href="#build-it">Build it</a>
+      </nav>
+
+      {relatedAll.length > 0 && (
+        <div class="related">
+          <p class="eyebrow">Related recipes</p>
+          {relatedAll.map((x) => (
+            <a class="item" href={`/r/${x.id}`}><span class="t">{x.title}</span><span class="s">{x.domain} · {FOR_LABELS[x.for] || x.for}</span></a>
+          ))}
+          <p class="small muted">Something missing? <a href="https://github.com/Fibery-inc/process-cookbook/issues/new">Suggest a change</a> or <a href="/#requested">request a recipe</a>.</p>
+        </div>
+      )}
+    </aside>
+  </div>
+
+  <script define:vars={{ mdUrl, title: r.title }}>
+    const box = document.getElementById('run-it');
+    const prompts = {
+      fibery: `Set up "${title}" in Fibery from the recipe at ${mdUrl}: read it, ask me the few questions in Making it yours, then build it with the Fibery plugin.`,
+      airtable: `Set up "${title}" in Airtable from the recipe at ${mdUrl}: read it, then build the base from Details for building.`,
+      notion: `Set up "${title}" in Notion from the recipe at ${mdUrl}: read it, then build the databases and views from Details for building.`,
+      lovable: `Build an app for "${title}" from the recipe at ${mdUrl}: read it, then make the tables, pages and rules from Details for building.`,
+      other: `Set up "${title}" in my tool from the recipe at ${mdUrl}: read it, ask me which tool I use, then build it from Details for building.`,
+    };
+    box.querySelectorAll('.tools button').forEach((b) => {
+      b.addEventListener('click', () => {
+        const tool = b.dataset.tool;
+        box.querySelectorAll('.tools button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        box.querySelectorAll('.note').forEach((n) => { n.hidden = n.dataset.note !== tool; });
+        const p = encodeURIComponent(prompts[tool]);
+        box.querySelector('[data-chat="claude"]').href = `https://claude.ai/new?q=${p}`;
+        box.querySelector('[data-chat="chatgpt"]').href = `https://chatgpt.com/?q=${p}`;
+      });
+    });
+  </script>
+  <script>
+    if (document.querySelector('pre.mermaid')) {
+      import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(({ default: mermaid }) => {
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+        mermaid.run({ querySelector: 'pre.mermaid' });
+      });
+    }
+  </script>
+</Base>

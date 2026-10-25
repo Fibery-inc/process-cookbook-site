@@ -1,0 +1,23 @@
+[
+  {
+    "id": "software-company",
+    "title": "Running a 20-person software company",
+    "blurb": "Shape Up, incident management, OKRs, a sales pipeline, purchase requests and a content calendar: the whole company in one connected setup.",
+    "tint": "#ebf5ff",
+    "recipes": ["shape-up", "incident-management", "okrs", "sales-pipeline", "purchase-requests", "content-calendar"]
+  },
+  {
+    "id": "workshop",
+    "title": "A workshop that builds to order",
+    "blurb": "Deposits, parts on order, build stages with photos and the customer waiting at the end, whether it's a guitar, a yarn batch or a cracked screen.",
+    "tint": "#fef3ea",
+    "recipes": ["custom-guitar-shop", "fiber-mill", "phone-repair-shop"]
+  },
+  {
+    "id": "clubs-and-causes",
+    "title": "Clubs, crews and causes",
+    "blurb": "Groups where most members never open the tool: a few organisers, a sign-up form, a season or a program to run, and a count at the end of the year.",
+    "tint": "#e8f3fb",
+    "recipes": ["tnr-program", "cs2-team-practice"]
+  }
+]

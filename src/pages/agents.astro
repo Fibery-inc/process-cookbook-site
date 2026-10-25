@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+const site = Astro.site?.toString().replace(/\/$/, '') || '';
+---
+<Base title="For agents: MCP and REST · Process Cookbook" description="Search and fetch recipes from an AI agent: a public MCP endpoint and a REST mirror, no sign-in." >
+  <section class="section wrap" style="padding-bottom: 80px; max-width: 820px;">
+    <h2 style="font-size: 30px; margin-bottom: 12px;">For agents</h2>
+    <p class="muted" style="font-size: 17px; margin-bottom: 28px;">The same index that powers search here is open to any agent, with no sign-in.</p>
+    <div class="article" style="max-width: none;">
+      <h2 style="font-size: 22px;">MCP</h2>
+      <p>Streamable HTTP at <code>{site}/mcp</code>. Tools: <code>find_recipes</code> (query, optional domain, for, limit), <code>get_recipe</code> (id, optional part: human, build or all) and <code>list_domains</code>. Add it to Claude as a custom connector, or to any MCP client by URL.</p>
+      <h2 style="font-size: 22px;">REST</h2>
+      <ul>
+        <li><code>GET /api/search?q=volunteer+cats&amp;domain=nonprofit&amp;limit=5</code>: ranked matches as JSON.</li>
+        <li><code>GET /api/recipes/tnr-program</code>: one recipe as JSON, with its Markdown.</li>
+        <li><code>GET /r/tnr-program.md</code>: the recipe file itself.</li>
+        <li><code>GET /api/domains</code>: domains with counts.</li>
+        <li><code>GET /llms.txt</code>: the whole library as a list an agent can read in one go.</li>
+      </ul>
+      <h2 style="font-size: 22px;">Rules</h2>
+      <p>Everything is CC BY 4.0: build it anywhere, credit the cookbook. Be reasonable with request rates. A recipe's canonical source is its file in the <a href="https://github.com/Fibery-inc/process-cookbook">GitHub repo</a>; this site and the endpoint are printed from it on every push.</p>
+    </div>
+  </section>
+</Base>

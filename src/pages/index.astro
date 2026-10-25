@@ -1,0 +1,156 @@
+---
+import Base from '../layouts/Base.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import { recipes, byId, domains, meta, domainLabel } from '../lib/recipes';
+import collections from '../data/collections.json';
+import requests from '../data/requests.json';
+
+const featured = byId('tnr-program') || recipes[0];
+const rest = recipes.filter((r) => r.id !== featured.id).slice(0, 4);
+const domainList = domains();
+const requestUrl = 'https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request&title=Recipe%20request%3A%20';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Process Cookbook',
+  url: Astro.site?.toString(),
+  description: 'An open library of how companies, teams and communities run things: every process in plain words, with the model to build it in the tool you use.',
+  potentialAction: { '@type': 'SearchAction', target: `${Astro.site}search?q={search_term_string}`, 'query-input': 'required name=search_term_string' },
+};
+---
+<Base title="Process Cookbook: how companies, teams and communities run things" description="An open, CC BY library of processes written in plain words, with the model to build each one in the tool you use and the sources it was written from." current="recipes" jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow warm">An open library · CC BY 4.0 · {meta.count} recipes in {domainList.length} domains</p>
+      <h1>How companies, teams and communities run things.</h1>
+      <p class="lead">Every process written down in plain words, with the model to build it in the tool you use and the sources it was written from. A two-person shop, a volunteer group, a 300-person company: read it, make it yours, run it.</p>
+      <form action="/search" method="get" role="search">
+        <label class="sr-only" for="q">Search a process</label>
+        <input class="input" id="q" name="q" type="search" placeholder="Search a process: TNR program, repair orders, OKRs, incident response…" />
+        <button class="btn solid lg" type="submit">Search</button>
+      </form>
+      <div class="chips">
+        <span class="small muted" style="margin-right: 4px;">Or browse a domain:</span>
+        {domainList.map((d) => <a class="tag" data-domain={d} href={`/d/${d}`}>{d}</a>)}
+        <a class="small" style="font-weight: 500;" href="/domains">All domains →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="recipes">
+    <div class="section-head">
+      <h2>Recipes</h2>
+      <a class="small" style="font-weight: 500;" href="/recipes">All {meta.count} recipes →</a>
+    </div>
+    <div class="grid-3">
+      <RecipeCard recipe={featured} featured>
+        <p class="eyebrow" style="color: #3a6a8a;">Colony portrait · Laundromat lot</p>
+        <div class="portrait" aria-label="Eight cats: four fixed, one eartipped at the start, three left to fix">
+          <span class="fixed"></span><span class="fixed"></span><span class="fixed"></span><span class="fixed"></span>
+          <span class="start"></span>
+          <span class="left"></span><span class="left"></span><span class="left"></span>
+        </div>
+        <div class="small" style="display: flex; flex-wrap: wrap; gap: 6px 14px; color: #3a6a8a;">
+          <span>● fixed by the group</span><span>○ eartipped at start</span><span>◌ left to fix</span>
+        </div>
+        <p style="font-size: 14px;">One cat drawn per estimated cat; the picture every trapping fills in. <strong>Fixed share 62 of 100.</strong></p>
+      </RecipeCard>
+      {rest.map((r) => <RecipeCard recipe={r} />)}
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="steps">
+      <div>
+        <p class="eyebrow warm">1 · Read it</p>
+        <h3>The process in plain words</h3>
+        <p>One story follows a real case from start to finish. What people look at, the rules, and what must stay true, with the sources the recipe was written from.</p>
+      </div>
+      <div>
+        <p class="eyebrow warm">2 · Make it yours</p>
+        <h3>A few questions, not a rebuild</h3>
+        <p>Every recipe names the choices that change the setup: who logs what, which things you lend out, what you call them. Answer them and the rest follows.</p>
+      </div>
+      <div>
+        <p class="eyebrow warm">3 · Run it</p>
+        <h3>In the tools people use</h3>
+        <p>Pick your tool on the recipe page, Fibery, Airtable, Notion, Lovable and more, and hand the recipe to your AI assistant; or build it by hand from the model. Same recipe, your kitchen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="collections">
+    <div class="section-head">
+      <div>
+        <h2>Collections</h2>
+        <p class="intro">Recipes that belong together: everything one kind of organisation runs, picked so the pieces fit. Open a collection to set up the whole thing or just the parts you need.</p>
+      </div>
+    </div>
+    <div class="grid-3">
+      {collections.map((c) => {
+        const items = c.recipes.map((id) => byId(id)).filter(Boolean);
+        const fan = items.slice(0, 3);
+        return (
+          <a class="collection" href={`/collections/${c.id}`} style={`background: ${c.tint}`}>
+            <div class="fan" aria-hidden="true">
+              {fan.map((r) => <div><b>{r!.title}</b><small>{r!.domain}</small></div>)}
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <h3>{c.title}</h3>
+              <p>{c.blurb}</p>
+              <p class="count">{items.length} recipe{items.length === 1 ? '' : 's'} →</p>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section id="requested" style="background: var(--cream-2); border-top: 1px solid rgba(0,0,0,0.05); border-bottom: 1px solid rgba(0,0,0,0.05); margin-top: 40px;">
+    <div class="wrap" style="padding-top: 56px; padding-bottom: 64px; display: flex; flex-direction: column; gap: 24px;">
+      <div class="section-head" style="margin-bottom: 0;">
+        <div>
+          <h2>Requested recipes</h2>
+          <p class="intro">Processes people searched for and didn't find. Vote for the one you need with a 👍 on its issue; the most wanted get written first. Or write it yourself and take the byline.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <a class="btn solid" href={requestUrl}>Request a recipe</a>
+          <a class="btn" href="https://github.com/Fibery-inc/process-cookbook/issues?q=is%3Aissue+is%3Aopen+label%3A%22recipe+request%22+sort%3Areactions-%2B1-desc">All requests →</a>
+        </div>
+      </div>
+      {requests.length === 0 ? (
+        <div class="empty">No open requests yet. The first one is yours: say what the process is and who runs it, and it goes on the board.</div>
+      ) : (
+        <div class="grid-3">
+          {requests.slice(0, 6).map((q) => (
+            <div style="display: flex; gap: 16px; padding: 18px 20px; background: #fff; border: 1px solid var(--line); border-radius: 12px;">
+              <a href={q.url} aria-label={`Vote for ${q.title} on GitHub`} style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; flex: none; border-radius: 10px; border: 1px solid var(--line-2); background: var(--cream); color: var(--ink);">
+                <span style="font-size: 12px; line-height: 1;">▲</span><span style="font-size: 24px; line-height: 1.1; font-weight: 600;">{q.votes}</span>
+              </a>
+              <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+                <span class="small faint">requested {q.created}</span>
+                <h3 style="font-size: 16px; line-height: 1.3;">{q.title}</h3>
+                {q.body && <p class="small muted">{q.body.slice(0, 140)}</p>}
+                <a class="small" style="font-weight: 500;" href="/contribute">Write this recipe →</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section wrap" id="contribute" style="padding-bottom: 80px;">
+    <div class="contribute">
+      <div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 10px;">
+        <h2>Know how your group runs something?</h2>
+        <p>Add the recipe-writer skill to Claude or any AI assistant, tell it how your group runs the process, and answer its questions. It writes the recipe in the cookbook's format, with sources, and opens a pull request. A reviewer checks it, it goes live under your name, and anyone can build it anywhere.</p>
+        <p style="font-size: 14px; color: rgba(255,253,251,0.6);">Prefer to write by hand? The format is one Markdown file; the checks run on your pull request.</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <a class="btn solid" href="https://github.com/Fibery-inc/skills">Get the recipe-writer skill</a>
+        <a class="btn" href="https://github.com/Fibery-inc/process-cookbook/blob/main/FORMAT.md">Read the format</a>
+      </div>
+    </div>
+  </section>
+</Base>
