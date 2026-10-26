@@ -1,6 +1,6 @@
 ---
 import type { Recipe } from '../lib/recipes';
-import { FOR_LABELS, formatDate } from '../lib/recipes';
+import { FOR_LABELS } from '../lib/recipes';
 import { render } from '../lib/markdown';
 
 interface Props { recipe: Recipe; featured?: boolean }
@@ -13,7 +13,6 @@ const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="tag" data-domain={r.domain}>{r.domain}</span>
         <span class="small muted">{FOR_LABELS[r.for] || r.for}</span>
-        <span class="small faint" style="margin-left: auto;">{formatDate(r.updated)}</span>
       </div>
       <h3>{r.title}</h3>
       <p class="promise" set:html={promiseHtml} />
@@ -32,7 +31,6 @@ const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
     <div class="card-body">
       <h3>{r.title}</h3>
       <p class="promise" set:html={promiseHtml} />
-      <p class="foot">Updated {formatDate(r.updated)}</p>
     </div>
   </a>
 )}
