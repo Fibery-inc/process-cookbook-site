@@ -175,6 +175,16 @@ button { font: inherit; }
 .fact .label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 .fact .text { font-size: 15px; line-height: 1.5; }
 .fact strong { font-weight: 600; }
+/* On wide screens the cards stand to the right of the title and promise, over the rail; narrower, they follow the promise. */
+@media (min-width: 900px) {
+  .title-block.with-facts .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 348px); grid-template-rows: repeat(5, auto) 1fr; grid-template-areas: 'crumbs crumbs' 'tags tags' 'title facts' 'promise facts' 'meta facts' '. facts'; gap: 0 48px; }
+  .with-facts .crumbs { grid-area: crumbs; }
+  .with-facts .tag-row { grid-area: tags; margin-top: 18px; }
+  .with-facts h1 { grid-area: title; margin-top: 18px; }
+  .with-facts .promise { grid-area: promise; margin-top: 18px; }
+  .with-facts .meta { grid-area: meta; margin-top: 18px; }
+  .with-facts .facts { grid-area: facts; grid-template-columns: minmax(0, 1fr); align-self: start; margin-top: 18px; }
+}
 .meta { font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
 .meta .gh { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 500; }
 

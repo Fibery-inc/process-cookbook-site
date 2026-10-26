@@ -71,7 +71,7 @@ const notes: Record<string, string> = {
 };
 ---
 <Base title={`${r.title}: how ${audience} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
-  <section class="title-block">
+  <section class:list={['title-block', { 'with-facts': facts > 0 }]}>
     <div class="wrap">
       <nav class="crumbs" aria-label="Breadcrumb">
         <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><span class="here">{r.title}</span>
