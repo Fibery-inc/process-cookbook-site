@@ -4,14 +4,14 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const MODEL = process.env.RELATED_MODEL || 'text-embedding-3-small';
-const MIN_SIMILARITY = Number(process.env.RELATED_MIN_SIMILARITY || 0.5);
+const MODEL = process.env.RELATED_MODEL || 'text-embedding-3-large';
+const MIN_SIMILARITY = Number(process.env.RELATED_MIN_SIMILARITY || 0.4);
 const MAX = 3;
 
-const embedText = (r) =>
-  [r.title, r.summary, r.promise, r.keywords.length ? `Keywords: ${r.keywords.join(', ')}.` : '', (r.sections['The idea'] || '').slice(0, 2000)]
-    .filter(Boolean)
-    .join('\n\n');
+// Only what the recipe says it is. Promise and body text share the language of every process and pull all scores together.
+// Calibrated with text-embedding-3-large: made-up close pairs (Scrum and Shape Up, football and rugby club) scored 0.40 to 0.69,
+// the unrelated pairs among the first 13 recipes 0.39 at most.
+const embedText = (r) => `${r.title}. ${r.summary}${r.keywords.length ? ` Keywords: ${r.keywords.join(', ')}.` : ''}`;
 
 async function embed(texts, key) {
   const res = await fetch('https://api.openai.com/v1/embeddings', {
