@@ -11,10 +11,17 @@ import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel, HUMAN_SECTIONS,
 import { render, renderInline } from '../../lib/markdown';
 import { wordTerms } from '../../lib/terms';
 import { TOOLS, allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
+import claudeSvg from '../../icons/claude.svg?raw';
+import chatgptSvg from '../../icons/chatgpt.svg?raw';
 
 export function getStaticPaths() {
   return recipes.map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
 }
+// Whatever SVG sits in src/icons (an official mark included) is drawn the same way: 16px, in the button's color.
+const icon = (svg: string) =>
+  svg
+    .replace(/<title>[\s\S]*?<\/title>/, '')
+    .replace(/<svg\b([^>]*)>/, (_, attrs: string) => `<svg${attrs.replace(/\s(?:width|height|fill|role|aria-hidden|focusable)="[^"]*"/g, '')} width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false">`);
 const { recipe: r } = Astro.props;
 const p = r.parsed;
 const minutes = p?.minutes ?? { sections: {} as Record<string, number>, human: 0, model: 0 };
@@ -176,13 +183,10 @@ const notes: Record<string, string> = {
       <div class="rail-zone">
         <div class="rail-sticky">
           <div class="runit" id="run-it" data-md-url={mdUrl} data-title={r.title}>
-            <div class="head">
-              <h2>Run it in your tool</h2>
-              <span class="small faint">and more</span>
-            </div>
-            <div class="tools" role="group" aria-label="Pick a tool">
-              {TOOLS.map((t, i) => <button type="button" data-tool={t.id} aria-pressed={i === 0 ? 'true' : 'false'}>{t.label}</button>)}
-            </div>
+            <h2><label for="runit-tool">Run it in your tool</label></h2>
+            <select id="runit-tool" class="input runit-tool" data-tool-select>
+              {TOOLS.map((t) => <option value={t.id}>{t.label}</option>)}
+            </select>
             {TOOLS.map((t, i) => <p class="note" data-note={t.id} hidden={i !== 0}>{notes[t.id]}</p>)}
             {p?.questions && (
               <p class="answers-box">
@@ -191,15 +195,17 @@ const notes: Record<string, string> = {
                 <a class="small" href="#making-it-yours">Change them in Making it yours</a>
               </p>
             )}
-            <div class="row">
-              <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
-              <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener">With ChatGPT</a>
+            <div class="setup">
+              <p class="setup-label" id="setup-with">Set it up with</p>
+              <div class="row" role="group" aria-labelledby="setup-with">
+                <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener"><Fragment set:html={icon(claudeSvg)} />Claude</a>
+                <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener"><Fragment set:html={icon(chatgptSvg)} />ChatGPT</a>
+              </div>
             </div>
             <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
             <div class="links">
-              <a href={`/r/${r.id}.md`}>Copy as Markdown</a>
+              <button type="button" class="copy-md" data-copy-md={`/r/${r.id}.md`} aria-live="polite"><span class="idle">Copy as Markdown</span><span class="done">Copied</span></button>
               <a href={r.github}>View on GitHub</a>
-              <a href={r.raw}>Raw file</a>
             </div>
           </div>
           <Toc entries={toc} minutes={minutes.human} />
@@ -278,14 +284,41 @@ const notes: Record<string, string> = {
 
     function pickTool(id: string) {
       tool = id;
-      document.querySelectorAll<HTMLButtonElement>('.tools [data-tool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === id)));
       document.querySelectorAll<HTMLElement>('[data-note]').forEach((n) => (n.hidden = n.dataset.note !== id));
       document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => (s.value = id));
       update();
     }
 
-    document.querySelectorAll<HTMLButtonElement>('.tools [data-tool]').forEach((b) => b.addEventListener('click', () => pickTool(b.dataset.tool!)));
     document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => s.addEventListener('change', () => pickTool(s.value)));
+
+    // The file is fetched as soon as someone reaches for the button: Safari allows a clipboard write only
+    // within the click itself, so the text has to be ready by then. Without a clipboard, the file opens.
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-md]').forEach((button) => {
+      const url = button.dataset.copyMd!;
+      let file: Promise<string> | null = null;
+      let text: string | null = null;
+      let timer = 0;
+      const load = () =>
+        (file ||= fetch(url)
+          .then((res) => (res.ok ? res.text() : Promise.reject(new Error(`${res.status}`))))
+          .then((t) => (text = t))
+          .catch((e) => {
+            file = null;
+            throw e;
+          }));
+      for (const type of ['pointerenter', 'focus', 'touchstart']) button.addEventListener(type, () => load().catch(() => {}), { passive: true });
+      button.addEventListener('click', async () => {
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('no clipboard');
+          await navigator.clipboard.writeText(text ?? (await load()));
+          button.dataset.copied = '';
+          clearTimeout(timer);
+          timer = window.setTimeout(() => delete button.dataset.copied, 2000);
+        } catch {
+          window.open(url, '_blank', 'noopener');
+        }
+      });
+    });
 
     choices.forEach((c, i) => {
       c.querySelectorAll<HTMLButtonElement>('[data-answer]').forEach((b) =>

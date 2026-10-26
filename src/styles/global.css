@@ -11,6 +11,7 @@
   --fibery: #bd5f00;
   --orange-ink: #984a00;
   --shadow: 0 0 2px rgba(43, 60, 76, 0.3), 0 3px 6px rgba(43, 60, 76, 0.05), 0 9px 26px rgba(43, 60, 76, 0.1);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%231b1611' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --font: Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -325,18 +326,23 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
   .rail-sticky { max-height: calc(100vh - 40px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; margin: -2px -14px 0; padding: 2px 14px 16px; }
 }
 .runit { display: flex; flex-direction: column; gap: 14px; padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
-.runit .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .runit h2 { font-size: 18px; letter-spacing: -0.01em; }
-.tools { display: flex; flex-wrap: wrap; gap: 6px; }
-.tools button { height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: var(--ink); border: 1px solid rgba(0, 0, 0, 0.14); }
-.tools button[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.runit-tool { width: 100%; padding-right: 38px; background: #fff var(--chevron) no-repeat right 14px center; appearance: none; -webkit-appearance: none; cursor: pointer; }
 .runit .note { font-size: 14px; line-height: 1.5; }
 .answers-box { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: var(--cream-2); border-radius: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .answers-box .t { font-weight: 600; color: var(--ink); }
 .answers-box a { font-weight: 500; }
+.runit .setup { display: flex; flex-direction: column; gap: 6px; }
+.setup-label { font-size: 13px; font-weight: 600; line-height: 1.45; color: var(--ink-2); }
 .runit .row { display: flex; gap: 8px; }
 .runit .row .btn { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
+.runit .row .btn svg { flex: none; }
 .runit .links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; font-weight: 500; padding-top: 8px; border-top: 1px solid rgba(0, 0, 0, 0.06); }
+.copy-md { display: inline-grid; padding: 0; border: 0; background: none; font: inherit; color: var(--link); text-align: left; cursor: pointer; }
+.copy-md > span { grid-area: 1 / 1; }
+.copy-md .done, .copy-md[data-copied] .idle { visibility: hidden; }
+.copy-md[data-copied] .done { visibility: visible; }
+.copy-md:hover { color: var(--ink); text-decoration: underline; }
 .toc { display: flex; flex-direction: column; gap: 2px; padding: 4px 22px; font-size: 14px; }
 .toc .eyebrow { margin-bottom: 8px; }
 .toc a { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0 5px 12px; border-left: 2px solid rgba(0, 0, 0, 0.08); color: var(--ink-2); }
@@ -352,7 +358,7 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
 /* Narrow screens: the rail below the article, a bar fixed to the bottom */
 .phone-bar { display: none; }
 .pb-contents { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; background: #fff; border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 10px; color: var(--ink); cursor: pointer; }
-.pb-tool { flex: 0 1 auto; min-width: 0; max-width: 132px; height: 44px; padding: 0 28px 0 12px; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%231b1611' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center; border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 10px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.pb-tool { flex: 0 1 auto; min-width: 0; max-width: 132px; height: 44px; padding: 0 28px 0 12px; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); background: #fff var(--chevron) no-repeat right 10px center; border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 10px; appearance: none; -webkit-appearance: none; cursor: pointer; }
 .pb-claude { flex: 1 1 auto; min-width: 0; height: 44px; border-radius: 10px; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; }
 .sheet { width: 100%; max-width: 560px; max-height: 85vh; margin: auto auto 0; padding: 0; border: 0; border-radius: 16px 16px 0 0; background: var(--paper); color: var(--ink); box-shadow: 0 -10px 30px rgba(43, 60, 76, 0.18); }
 .sheet::backdrop { background: rgba(27, 22, 17, 0.35); }
