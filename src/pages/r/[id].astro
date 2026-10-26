@@ -13,19 +13,35 @@ import { wordTerms } from '../../lib/terms';
 import { TOOLS, TOOL_KEY, FIBERY_CHATGPT_APP, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 import claudeSvg from '../../icons/claude.svg?raw';
 import chatgptSvg from '../../icons/chatgpt.svg?raw';
+import fiberySvg from '../../icons/fibery.svg?raw';
+import airtableSvg from '../../icons/airtable.svg?raw';
+import notionSvg from '../../icons/notion.svg?raw';
+import lovableSvg from '../../icons/lovable.svg?raw';
 
 export function getStaticPaths() {
   return recipes.map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
 }
-// Whatever SVG sits in src/icons is drawn 16px and hidden from screen readers; a mark with its own fill keeps
-// its color, one without takes the button's.
-const icon = (svg: string) =>
-  svg
+// A mark with its own fill keeps its color, one without takes the text's. Ids and <style> classes get a per-copy
+// prefix: the files share names like Layer_1 and .st0, and an inline <style> applies to the whole page.
+const icon = (svg: string, prefix: string, size = 16) => {
+  const styled = new Set(
+    [...svg.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].flatMap(([, css]) => [...css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1])),
+  );
+  return svg
     .replace(/<title>[\s\S]*?<\/title>/, '')
+    .replace(/\sid=(["'])(.*?)\1/g, (_, q, id) => ` id=${q}${prefix}-${id}${q}`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${prefix}-${id})`)
+    .replace(/(\s(?:xlink:)?href=)(["'])#(.*?)\2/g, (_, attr, q, id) => `${attr}${q}#${prefix}-${id}${q}`)
+    .replace(/\sclass=(["'])(.*?)\1/g, (_, q, names: string) => ` class=${q}${names.split(/\s+/).map((n) => (styled.has(n) ? `${prefix}-${n}` : n)).join(' ')}${q}`)
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/g, (css) => css.replace(/\.(-?[_a-zA-Z][\w-]*)/g, (m, n) => (styled.has(n) ? `.${prefix}-${n}` : m)))
     .replace(/<svg\b([^>]*)>/, (_, attrs: string) => {
       const fill = /\sfill=("[^"]*"|'[^']*')/.test(attrs) ? '' : ' fill="currentColor"';
-      return `<svg${attrs.replace(/\s(?:width|height|role|aria-hidden|focusable)=("[^"]*"|'[^']*')/g, '')} width="16" height="16"${fill} aria-hidden="true" focusable="false">`;
+      return `<svg${attrs.replace(/\s(?:width|height|role|aria-hidden|focusable)=("[^"]*"|'[^']*')/g, '')} width="${size}" height="${size}"${fill} aria-hidden="true" focusable="false">`;
     });
+};
+const anotherToolSvg =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4.75 3h4a1.75 1.75 0 0 1 1.75 1.75v4a1.75 1.75 0 0 1-1.75 1.75h-4A1.75 1.75 0 0 1 3 8.75v-4A1.75 1.75 0 0 1 4.75 3zm10.5 0h4A1.75 1.75 0 0 1 21 4.75v4a1.75 1.75 0 0 1-1.75 1.75h-4a1.75 1.75 0 0 1-1.75-1.75v-4A1.75 1.75 0 0 1 15.25 3zm-10.5 10.5h4a1.75 1.75 0 0 1 1.75 1.75v4A1.75 1.75 0 0 1 8.75 21h-4A1.75 1.75 0 0 1 3 19.25v-4a1.75 1.75 0 0 1 1.75-1.75zm11.5.25h2v2.5h2.5v2h-2.5v2.5h-2v-2.5h-2.5v-2h2.5z"/></svg>';
+const toolSvg: Record<string, string> = { fibery: fiberySvg, airtable: airtableSvg, notion: notionSvg, lovable: lovableSvg, other: anotherToolSvg };
 const { recipe: r } = Astro.props;
 const p = r.parsed;
 const terms = wordTerms(p?.words);
@@ -195,31 +211,41 @@ const notes: Record<string, string> = {
       <div class="rail-zone">
         <div class="rail-sticky">
           <div class="runit" id="run-it" data-md-url={mdUrl} data-title={r.title} data-tool-key={TOOL_KEY} data-links={JSON.stringify(runLinks)}>
-            <h2><label for="runit-tool">Run it in your tool</label></h2>
-            <select id="runit-tool" class="input runit-tool" data-tool-select>
-              {TOOLS.map((t) => <option value={t.id}>{t.label}</option>)}
-            </select>
+            <h2 id="runit-label">Run it in your tool</h2>
+            <div class="picker" data-tool-picker>
+              <button type="button" id="runit-tool" class="input picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="runit-tools" aria-labelledby="runit-label runit-tool-name" data-value={TOOLS[0].id}>
+                {TOOLS.map((t, i) => <span class="tool-icon" data-tool={t.id} data-tool-icon={t.id} hidden={i !== 0} set:html={icon(toolSvg[t.id], `tool-b-${t.id}`, 18)} />)}
+                <span id="runit-tool-name">{TOOLS[0].label}</span>
+              </button>
+              <ul class="picker-list" id="runit-tools" role="listbox" aria-labelledby="runit-label" tabindex="-1" hidden>
+                {TOOLS.map((t, i) => (
+                  <li id={`runit-tool-${t.id}`} role="option" data-value={t.id} data-label={t.label} aria-selected={String(i === 0)}>
+                    <span class="tool-icon" data-tool={t.id} set:html={icon(toolSvg[t.id], `tool-o-${t.id}`, 18)} />
+                    {t.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
             {TOOLS.map((t, i) => <p class="note" data-for-tool={t.id} hidden={i !== 0}>{notes[t.id]}</p>)}
             <p class="needs" data-for-tool="fibery">Needs a <a href={fiberyUrl} target="_blank" rel="noopener">Fibery</a> workspace and the <a href={fiberyPlugin} target="_blank" rel="noopener">Fibery plugin in Claude</a>, or the <a href={FIBERY_CHATGPT_APP} target="_blank" rel="noopener">Fibery app in ChatGPT</a>, set up once.</p>
+            {p?.questions && (
+              <p class="answers-line"><span data-answers-line>{defaultsLine}</span> · <a href="#making-it-yours">change</a></p>
+            )}
             <div class="setup">
               <p class="setup-label" id="setup-with">Set it up with</p>
               <div class="row" role="group" aria-labelledby="setup-with">
-                <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener"><Fragment set:html={icon(claudeSvg)} />Claude</a>
-                <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener"><Fragment set:html={icon(chatgptSvg)} />ChatGPT</a>
+                <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener"><Fragment set:html={icon(claudeSvg, 'chat-claude')} />Claude</a>
+                <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener"><Fragment set:html={icon(chatgptSvg, 'chat-chatgpt')} />ChatGPT</a>
               </div>
               <div class="prompt-tools">
                 <button type="button" class="link-btn copy" data-copy-prompt aria-live="polite"><span class="idle">Copy the prompt</span><span class="done">Copied</span></button>
                 <button type="button" class="link-btn" data-show-prompt aria-expanded="false" aria-controls="runit-prompt">Show the prompt</button>
               </div>
               <p class="prompt-text" id="runit-prompt" hidden>{prompt}</p>
-              {p?.questions && (
-                <p class="answers-line"><span data-answers-line>{defaultsLine}</span> · <a href="#making-it-yours">change</a></p>
-              )}
             </div>
             <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
             <div class="links">
-              <button type="button" class="link-btn copy" data-copy-md={`/r/${r.id}.md`} aria-live="polite"><span class="idle">Copy as Markdown</span><span class="done">Copied</span></button>
-              <a href={r.github}>View on GitHub</a>
+              <button type="button" class="link-btn copy" data-copy-md={`/r/${r.id}.md`} aria-live="polite"><span class="idle">Copy Recipe as Markdown</span><span class="done">Copied</span></button>
             </div>
           </div>
           <script is:inline>
@@ -232,7 +258,12 @@ const notes: Record<string, string> = {
               if (!tool || !Object.prototype.hasOwnProperty.call(links, tool)) return;
               window.__runItTool = function () {
                 var l = links[tool];
+                var picked = document.getElementById('runit-tool-' + tool);
                 document.querySelectorAll('[data-tool-select]').forEach(function (s) { s.value = tool; });
+                document.getElementById('runit-tool').dataset.value = tool;
+                document.getElementById('runit-tool-name').textContent = picked.dataset.label;
+                document.querySelectorAll('[data-tool-icon]').forEach(function (n) { n.hidden = n.dataset.toolIcon !== tool; });
+                document.querySelectorAll('#runit-tools [role="option"]').forEach(function (o) { o.setAttribute('aria-selected', String(o === picked)); });
                 document.querySelectorAll('[data-for-tool]').forEach(function (n) { n.hidden = n.dataset.forTool !== tool; });
                 document.querySelectorAll('[data-chat="claude"]').forEach(function (a) { a.href = l.claude; });
                 document.querySelectorAll('[data-chat="chatgpt"]').forEach(function (a) { a.href = l.chatgpt; });
@@ -295,7 +326,12 @@ const notes: Record<string, string> = {
     const showPrompt = document.querySelector<HTMLButtonElement>('[data-show-prompt]');
     const answersLine = document.querySelector<HTMLElement>('[data-answers-line]');
     const defaultsLine = answersLine?.textContent || '';
-    let tool = document.querySelector<HTMLSelectElement>('#runit-tool')?.value || TOOLS[0].id;
+    const picker = document.querySelector<HTMLElement>('[data-tool-picker]');
+    const pickerButton = picker?.querySelector<HTMLButtonElement>('button[aria-haspopup]');
+    const pickerList = picker?.querySelector<HTMLElement>('[role="listbox"]');
+    const pickerOptions = [...(pickerList?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])];
+    const pickerName = document.getElementById('runit-tool-name');
+    let tool = pickerButton?.dataset.value || TOOLS[0].id;
     let prompt = '';
     let answered = false;
 
@@ -337,11 +373,77 @@ const notes: Record<string, string> = {
       }
       document.querySelectorAll<HTMLElement>('[data-for-tool]').forEach((n) => (n.hidden = n.dataset.forTool !== id));
       document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => (s.value = id));
+      if (pickerButton) pickerButton.dataset.value = id;
+      document.querySelectorAll<HTMLElement>('[data-tool-icon]').forEach((n) => (n.hidden = n.dataset.toolIcon !== id));
+      pickerOptions.forEach((o) => {
+        o.setAttribute('aria-selected', String(o.dataset.value === id));
+        if (o.dataset.value === id && pickerName) pickerName.textContent = o.dataset.label || '';
+      });
       update();
     }
 
     document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => s.addEventListener('change', () => pickTool(s.value)));
     update();
+
+    if (picker && pickerButton && pickerList && pickerOptions.length) {
+      let active = 0;
+      const setActive = (i: number) => {
+        active = Math.max(0, Math.min(i, pickerOptions.length - 1));
+        pickerOptions.forEach((o, j) => o.classList.toggle('active', j === active));
+        pickerList.setAttribute('aria-activedescendant', pickerOptions[active].id);
+      };
+      const openList = () => {
+        pickerList.hidden = false;
+        pickerButton.setAttribute('aria-expanded', 'true');
+        setActive(pickerOptions.findIndex((o) => o.dataset.value === tool));
+        pickerList.focus();
+      };
+      const closeList = (refocus: boolean) => {
+        pickerList.hidden = true;
+        pickerButton.setAttribute('aria-expanded', 'false');
+        pickerList.removeAttribute('aria-activedescendant');
+        if (refocus) pickerButton.focus();
+      };
+      const choose = (i: number) => {
+        closeList(true);
+        const id = pickerOptions[i]?.dataset.value;
+        if (id) pickTool(id);
+      };
+      const optionAt = (target: EventTarget | null) => pickerOptions.indexOf((target as Element | null)?.closest<HTMLElement>('[role="option"]') as HTMLElement);
+
+      // Pressing the button takes focus off the open list before the click arrives (Safari focuses nothing
+      // instead of the button); the click, not the blur, decides whether the list closes.
+      let pressing = false;
+      pickerButton.addEventListener('mousedown', () => (pressing = true));
+      addEventListener('mouseup', () => (pressing = false), true);
+      pickerButton.addEventListener('click', () => (pickerList.hidden ? openList() : closeList(true)));
+      pickerButton.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        e.preventDefault();
+        openList();
+      });
+      pickerList.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') setActive(active + 1);
+        else if (e.key === 'ArrowUp') setActive(active - 1);
+        else if (e.key === 'Home') setActive(0);
+        else if (e.key === 'End') setActive(pickerOptions.length - 1);
+        else if (e.key === 'Enter' || e.key === ' ') choose(active);
+        else if (e.key === 'Escape') closeList(true);
+        else return;
+        e.preventDefault();
+      });
+      pickerList.addEventListener('click', (e) => {
+        const i = optionAt(e.target);
+        if (i >= 0) choose(i);
+      });
+      pickerList.addEventListener('mouseover', (e) => {
+        const i = optionAt(e.target);
+        if (i >= 0 && i !== active) setActive(i);
+      });
+      // Tab, or a click anywhere else, takes focus out of the list; iOS doesn't move focus on a tap, hence pointerdown.
+      pickerList.addEventListener('focusout', () => !pressing && !pickerList.hidden && closeList(false));
+      document.addEventListener('pointerdown', (e) => !pickerList.hidden && !picker.contains(e.target as Node) && closeList(false));
+    }
 
     const timers = new WeakMap<HTMLElement, number>();
     function flashCopied(button: HTMLElement) {

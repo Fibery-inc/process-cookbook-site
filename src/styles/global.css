@@ -327,13 +327,25 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
 }
 .runit { display: flex; flex-direction: column; gap: 14px; padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
 .runit h2 { font-size: 18px; letter-spacing: -0.01em; }
-.runit-tool { width: 100%; padding-right: 38px; background: #fff var(--chevron) no-repeat right 14px center; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.picker { position: relative; }
+.picker-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding-right: 38px; background: #fff var(--chevron) no-repeat right 14px center; text-align: left; cursor: pointer; }
+.picker-btn:hover { border-color: rgba(0, 0, 0, 0.22); }
+.picker-btn:focus { outline: none; }
+.picker-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.picker-list { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 45; margin: 0; padding: 6px; list-style: none; background: #fff; border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--shadow); }
+.picker-list:focus { outline: none; }
+.picker-list [role='option'] { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border-radius: 6px; font-size: 15px; cursor: pointer; }
+.picker-list .active { background: #f3ede6; }
+.picker-list [aria-selected='true'] { font-weight: 500; }
+.picker-list [aria-selected='true']::after { content: ''; width: 10px; height: 5px; margin: -4px 2px 0 auto; border: solid var(--ink); border-width: 0 0 2px 2px; transform: rotate(-45deg); }
+.tool-icon { display: flex; flex: none; }
+.tool-icon[data-tool='other'] { color: var(--ink-3); }
 .runit .note { font-size: 14px; line-height: 1.5; }
 .runit .needs { margin-top: -6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .runit .setup { display: flex; flex-direction: column; gap: 6px; }
 .prompt-tools { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; font-weight: 500; }
 .prompt-text { padding: 10px 12px; background: var(--cream-2); border-radius: 8px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
-.answers-line { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.answers-line { padding: 10px 12px; background: var(--cream-2); border-radius: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .answers-line a { font-weight: 500; }
 .setup-label { font-size: 13px; font-weight: 600; line-height: 1.45; color: var(--ink-2); }
 .runit .row { display: flex; gap: 8px; }
