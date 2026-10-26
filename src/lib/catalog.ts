@@ -2,31 +2,59 @@
 import searchDocs from '../../public/search-index.json';
 import { recipes, byId, meta, humanMarkdown, buildMarkdown, domainLabel, type Recipe } from './recipes';
 import { makeIndex, searchDetailed, type SearchDoc, type Hit } from './search';
+import { scoreByMeaning, fitsByMeaning, FLOOR } from './semantic';
 
 const index = makeIndex(searchDocs as SearchDoc[]);
 const REQUEST_URL = 'https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request';
 
 export type FindOpts = { domain?: string; for?: string; limit?: number; debug?: boolean };
 
-export function findRecipes(query: string | undefined, opts: FindOpts = {}) {
+export async function findRecipes(query: string | undefined, opts: FindOpts = {}) {
   const q = (query || '').trim();
   const filter = { ...(opts.domain ? { domain: opts.domain } : {}), ...(opts.for ? { for: opts.for } : {}) };
   if (!q) return browse(filter, opts);
   const limit = Math.min(opts.limit || 5, 20);
-  const { hits, mode, coverage, fits, words } = searchDetailed(index, q, { ...opts, limit });
+  const words = searchDetailed(index, q, { ...opts, limit: 20 });
+  const meaning = await scoreByMeaning(q);
+  const inFilter = (id: string) => {
+    const r = byId(id);
+    return !!r && (!filter.domain || r.domain === filter.domain) && (!filter.for || r.for === filter.for);
+  };
+  const scored = meaning?.filter((s) => inFilter(s.id));
+  const fitsMeaning = !!scored && fitsByMeaning(scored);
+  const fits = words.fits || fitsMeaning;
+  const hits = scored ? blend(words.hits, scored, words.fits).slice(0, limit) : words.hits.slice(0, limit);
+  const wordsMatch = words.mode === 'and' ? 'all words' : words.mode === 'or' ? `some words (${Math.round(words.coverage * 100)}% of the query)` : 'none';
   return {
     query: q,
     mode: 'search' as const,
     ...filter,
     count: hits.length,
     fits,
-    match: mode === 'and' ? 'all words' : mode === 'or' ? `some words (${Math.round(coverage * 100)}% of the query)` : 'none',
+    match: words.fits ? wordsMatch : fitsMeaning ? 'meaning' : hits.length ? (scored ? 'nothing close' : wordsMatch) : 'none',
     hits: hits.map(withUrls),
     note: !fits
-      ? `No recipe fits well${hits.length ? '; the hits below share only some words with the query' : ''}. Browse with list_domains or an empty query, design from the process directly, or request a recipe at ${REQUEST_URL}`
+      ? `No recipe fits well${hits.length ? '; the hits below are the nearest, not a match' : ''}. Browse with list_domains or an empty query, design from the process directly, or request a recipe at ${REQUEST_URL}`
       : undefined,
-    ...(opts.debug ? { words } : {}),
+    ...(opts.debug ? { words: words.words, meaning: scored ? scored.slice(0, 5).map((s) => `${s.id} ${s.similarity.toFixed(2)}`) : 'off' } : {}),
   };
+}
+
+// Reciprocal rank fusion, meaning weighted twice: in calibration it ranked the right recipe first for every query.
+// A recipe found by words but far in meaning is noise (fuzzy spelling, a shared common word); only the best word hit
+// stays when the words fit, so a rare term the embedding misses ("eartip") still finds its recipe.
+const RRF_K = 10;
+function blend(wordHits: Hit[], scored: { id: string; similarity: number }[], wordsFit: boolean): (Hit & { similarity: number })[] {
+  const similarity = new Map(scored.map((s) => [s.id, s.similarity]));
+  const score = new Map<string, number>();
+  scored.filter((s) => s.similarity >= FLOOR).forEach((s, i) => score.set(s.id, 2 / (RRF_K + i + 1)));
+  wordHits.forEach((h, i) => {
+    if ((similarity.get(h.id) ?? 0) < FLOOR && !(wordsFit && i === 0)) return;
+    score.set(h.id, (score.get(h.id) || 0) + 1 / (RRF_K + i + 1));
+  });
+  return [...score.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([id]) => ({ ...(wordHits.find((h) => h.id === id) || summaryOf(byId(id)!)), similarity: Math.round((similarity.get(id) ?? 0) * 100) / 100 }));
 }
 
 // No query: the recipes themselves, in domain and title order, so a model can read the shelf instead of guessing a search.

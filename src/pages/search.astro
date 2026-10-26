@@ -15,7 +15,7 @@ const list = domains();
       </select>
       <button class="btn solid lg" type="submit">Search</button>
     </form>
-    <p id="status" class="small muted" style="margin-bottom: 16px;">Type to search. Results update as you type.</p>
+    <p id="status" class="small muted" style="margin-bottom: 16px;">Type to search, in your own words or any language.</p>
     <div id="results" class="results"></div>
   </section>
 
@@ -36,6 +36,35 @@ const list = domains();
 
     function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!)); }
 
+    const requestLink = (text: string) => `<a href="https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request&title=Recipe%20request%3A%20${encodeURIComponent(text)}">Request “${esc(text)}”</a>`;
+    const resultHtml = (h: any) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span></span></a>`;
+
+    function render(text: string, hits: any[], fits: boolean) {
+      if (!hits.length) {
+        status.textContent = `Nothing for “${text}” yet.`;
+        results.innerHTML = `<div class="empty">No recipe matches yet. ${requestLink(text)} and it goes on the board, or <a href="/contribute">write it</a>.</div>`;
+        return;
+      }
+      status.textContent = fits ? `${hits.length} recipe${hits.length === 1 ? '' : 's'} for “${text}”` : `Nothing fits “${text}” closely. The nearest:`;
+      results.innerHTML = hits.map(resultHtml).join('') + (fits ? '' : `<div class="empty">Not it? ${requestLink(text)} and it goes on the board, or <a href="/contribute">write it</a>.</div>`);
+    }
+
+    // Words answer instantly in the browser; the server adds meaning (other phrasings, other languages) a moment later.
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    let seq = 0;
+    async function byMeaning(text: string, domain: string, mine: number) {
+      try {
+        const params = new URLSearchParams({ q: text, limit: '20' });
+        if (domain) params.set('domain', domain);
+        const res = await fetch(`/api/search?${params}`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        if (mine === seq) render(text, data.hits || [], !!data.fits);
+      } catch {
+        if (mine === seq && !results.innerHTML) render(text, [], false);
+      }
+    }
+
     function run() {
       if (!index) return;
       const text = q.value.trim();
@@ -44,12 +73,13 @@ const list = domains();
       text ? url.searchParams.set('q', text) : url.searchParams.delete('q');
       domain ? url.searchParams.set('domain', domain) : url.searchParams.delete('domain');
       history.replaceState(null, '', url);
-      if (!text) { results.innerHTML = ''; status.textContent = 'Type to search. Results update as you type.'; return; }
+      const mine = ++seq;
+      clearTimeout(pending);
+      if (!text) { results.innerHTML = ''; status.textContent = 'Type to search, in your own words or any language.'; return; }
       const hits = search(index, text, { domain: domain || undefined, limit: 20 });
-      status.textContent = hits.length ? `${hits.length} recipe${hits.length === 1 ? '' : 's'} for “${text}”` : `Nothing for “${text}” yet.`;
-      results.innerHTML = hits.length
-        ? hits.map((h) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span></span></a>`).join('')
-        : `<div class="empty">No recipe matches yet. <a href="https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request&title=Recipe%20request%3A%20${encodeURIComponent(text)}">Request “${esc(text)}”</a> and it goes on the board, or <a href="/contribute">write it</a>.</div>`;
+      if (hits.length) render(text, hits, true);
+      else { status.textContent = `Searching for “${text}”…`; results.innerHTML = ''; }
+      pending = setTimeout(() => byMeaning(text, domain, mine), 350);
     }
 
     form.addEventListener('submit', (e) => { e.preventDefault(); run(); });

@@ -17,14 +17,14 @@ const handler = createMcpHandler(
           query: z
             .string()
             .optional()
-            .describe('The process in the person\'s words, e.g. "volunteer cat rescue" or "repair orders for a phone shop". Leave it out to browse: with domain or for, their recipes; alone, the whole library in domain order.'),
+            .describe('The process in the person\'s words, in any language, e.g. "we look after street cats" or "repair orders for a phone shop"; it matches by meaning as well as words. Leave it out to browse: with domain or for, their recipes; alone, the whole library in domain order.'),
           domain: z.string().optional().describe('Limit to one domain id, e.g. nonprofit, software, retail'),
           for: z.enum(['solo', 'team', 'company', 'community']).optional().describe('Who runs it'),
           limit: z.number().int().min(1).max(50).optional().describe('How many to return: default 5 for a search (max 20), all for a browse (max 50)'),
         }),
       },
       async ({ query, domain, for: f, limit }) => {
-        const result = findRecipes(query, { domain, for: f, limit });
+        const result = await findRecipes(query, { domain, for: f, limit });
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 1) }] };
       },
     );

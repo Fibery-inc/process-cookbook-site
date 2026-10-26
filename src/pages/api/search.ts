@@ -9,11 +9,11 @@ const headers = {
   'Cache-Control': 'public, max-age=60, s-maxage=300',
 };
 
-// GET /api/search?q=&domain=&for=&limit=&debug=1. Without q it lists recipes (a browse); debug adds the matched terms.
-export const GET: APIRoute = ({ url }) => {
+// GET /api/search?q=&domain=&for=&limit=&debug=1. Without q it lists recipes (a browse); debug adds the words searched and the closest recipes by meaning.
+export const GET: APIRoute = async ({ url }) => {
   const p = url.searchParams;
   const limit = Number(p.get('limit'));
-  const result = findRecipes(p.get('q') || '', {
+  const result = await findRecipes(p.get('q') || '', {
     domain: p.get('domain') || undefined,
     for: p.get('for') || undefined,
     limit: Number.isFinite(limit) && limit > 0 ? limit : undefined,

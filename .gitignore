@@ -6,5 +6,6 @@ dist/
 src/data/recipes.json
 src/data/meta.json
 src/data/requests.json
+src/data/vectors.json
 public/search-index.json
 .env*

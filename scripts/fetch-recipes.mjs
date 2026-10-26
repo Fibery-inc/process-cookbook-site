@@ -1,10 +1,11 @@
 // Pulls the Process Cookbook repo and turns every recipe into JSON the site and the endpoint read.
-// Output: src/data/recipes.json (everything), public/search-index.json (what search needs), src/data/meta.json.
+// Output: src/data/recipes.json (everything), public/search-index.json (what search needs), src/data/meta.json,
+// src/data/vectors.json (one embedding per recipe, for search by meaning on the server).
 import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import matter from 'gray-matter';
-import { addRelated } from './related.mjs';
+import { embedRecipes, addRelated, vectorsFile } from './embeddings.mjs';
 
 const REPO = process.env.COOKBOOK_REPO || 'https://github.com/Fibery-inc/process-cookbook.git';
 const REF = process.env.COOKBOOK_REF || 'main';
@@ -562,7 +563,8 @@ for (const domain of readdirSync(recipesDir).sort()) {
   }
 }
 
-await addRelated(recipes, join(ROOT, 'node_modules/.cache/related-embeddings.json'));
+const vectors = await embedRecipes(recipes, join(ROOT, 'node_modules/.cache/recipe-embeddings.json'));
+addRelated(recipes, vectors);
 
 const domains = {};
 for (const r of recipes) domains[r.domain] = (domains[r.domain] || 0) + 1;
@@ -596,6 +598,7 @@ writeFileSync(join(ROOT, 'src/data/requests.json'), JSON.stringify(requests, nul
 mkdirSync(join(ROOT, 'src/data'), { recursive: true });
 mkdirSync(join(ROOT, 'public'), { recursive: true });
 writeFileSync(join(ROOT, 'src/data/recipes.json'), JSON.stringify(recipes, null, 1));
+writeFileSync(join(ROOT, 'src/data/vectors.json'), JSON.stringify(vectorsFile(recipes, vectors)));
 writeFileSync(
   join(ROOT, 'public/search-index.json'),
   JSON.stringify(
