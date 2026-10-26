@@ -24,7 +24,7 @@ npm run build      # fetches, then builds to .vercel/output
 | `/d/<domain>`, `/domains`, `/recipes`, `/collections/<id>` | Browsing |
 | `/search?q=` | Search in the browser (MiniSearch over `search-index.json`) |
 | `/api/search?q=&domain=&for=&limit=` | The same search as JSON, for agents and other sites; without `q` it lists recipes; `&debug=1` adds the matched terms |
-| `/api/recipes/<id>?part=human\|build\|all` | One recipe as JSON with its Markdown (frontmatter folded into the fields) |
+| `/api/recipes/<id>?part=human\|model\|all` | One recipe as JSON with its Markdown (frontmatter folded into the fields); `model` is Details for building alone and depends on `human`, so build from `all` |
 | `/api/domains` | Domains with counts and their recipes |
 | `/mcp` | MCP (streamable HTTP, no sign-in): `find_recipes` (search, or browse without a query), `get_recipe`, `list_domains` |
 

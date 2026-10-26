@@ -1,6 +1,6 @@
 // The one index the REST routes and the MCP server share, built once per server instance.
 import searchDocs from '../../public/search-index.json';
-import { recipes, byId, meta, humanMarkdown, buildMarkdown, domainLabel, type Recipe } from './recipes';
+import { recipes, byId, meta, humanMarkdown, modelMarkdown, domainLabel, type Recipe } from './recipes';
 import { makeIndex, searchDetailed, type SearchDoc, type Hit } from './search';
 import { scoreByMeaning, fitsByMeaning, FLOOR } from './semantic';
 
@@ -77,12 +77,13 @@ function browse(filter: { domain?: string; for?: string }, opts: FindOpts) {
 const summaryOf = (r: Recipe): Hit => ({ id: r.id, title: r.title, summary: r.summary, domain: r.domain, for: r.for, version: r.version, updated: r.updated });
 const withUrls = (h: Hit) => ({ ...h, url: pageUrl(h.id), markdown: `${pageUrl(h.id)}.md` });
 
-export type Part = 'human' | 'build' | 'all';
+export const PARTS = ['human', 'model', 'all'] as const;
+export type Part = (typeof PARTS)[number];
 
 export function getRecipe(id: string, part: Part = 'all') {
   const r = byId(id);
   if (!r) return null;
-  const markdown = part === 'human' ? `# ${r.title}\n\n${r.promise}\n\n${humanMarkdown(r)}` : part === 'build' ? `# ${r.title}\n\n${buildMarkdown(r)}` : withoutFrontmatter(r.markdown);
+  const markdown = part === 'human' ? `# ${r.title}\n\n${r.promise}\n\n${humanMarkdown(r)}` : part === 'model' ? `# ${r.title}\n\n${modelMarkdown(r)}` : withoutFrontmatter(r.markdown);
   return {
     id: r.id,
     title: r.title,

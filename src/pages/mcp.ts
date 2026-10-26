@@ -34,10 +34,10 @@ const handler = createMcpHandler(
       {
         title: 'Get a recipe',
         description:
-          'Fetch one recipe by id as Markdown. `part` = "human" for the process in plain words (to explain or run it), "build" for Details for building (the model: databases, fields, states, views, rules), "all" for the whole recipe (to build it). The recipe is CC BY 4.0; its Build it section is part of the recipe.',
+          'Fetch one recipe by id as Markdown. To build it, fetch "all" (the default): the model alone is not enough. `part` = "human" for the process in plain words (to explain or run it), with its rules, its promises (What must stay true) and the questions to ask before setting it up (Making it yours); "model" for Details for building only (databases, fields, states, formulas, views), an appendix that depends on the human part: fetch it after "human", never alone; "all" for the whole recipe. The recipe is CC BY 4.0; its Build it section is part of the recipe.',
         inputSchema: z.object({
           id: z.string().min(1).describe('The recipe id from find_recipes, e.g. tnr-program'),
-          part: z.enum(['human', 'build', 'all']).optional().describe('Which part, default all'),
+          part: z.enum(['human', 'model', 'all']).optional().describe('Which part, default all; build from all'),
         }),
       },
       async ({ id, part }) => {

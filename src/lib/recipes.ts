@@ -110,6 +110,6 @@ export function modelSummary(r: Recipe) {
   return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0] || '';
 }
 
-export function buildMarkdown(r: Recipe) {
+export function modelMarkdown(r: Recipe) {
   return r.sections['Details for building'] ? `## Details for building\n\n${r.sections['Details for building']}` : '';
 }

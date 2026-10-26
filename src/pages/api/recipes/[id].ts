@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getRecipe } from '../../../lib/catalog';
+import { getRecipe, PARTS, type Part } from '../../../lib/catalog';
 
 export const prerender = false;
 
@@ -10,8 +10,9 @@ const headers = {
 };
 
 export const GET: APIRoute = ({ params, url }) => {
-  const part = (url.searchParams.get('part') || 'all') as 'human' | 'build' | 'all';
-  const r = getRecipe(params.id!, ['human', 'build', 'all'].includes(part) ? part : 'all');
+  const part = (url.searchParams.get('part') || 'all') as Part;
+  if (!PARTS.includes(part)) return new Response(JSON.stringify({ error: `unknown part "${part}"; use human, model or all (to build, all)` }), { status: 400, headers });
+  const r = getRecipe(params.id!, part);
   if (!r) return new Response(JSON.stringify({ error: `no recipe ${params.id}` }), { status: 404, headers });
   return new Response(JSON.stringify(r), { headers });
 };
