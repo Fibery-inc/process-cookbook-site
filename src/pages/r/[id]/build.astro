@@ -1,13 +1,13 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import { recipes, domainLabel, formatDate, modelSummary } from '../../../lib/recipes';
-import { render } from '../../../lib/markdown';
+import { wordTerms } from '../../../lib/terms';
 
 export function getStaticPaths() {
   return recipes.filter((r) => r.sections['Details for building']).map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
 }
 const { recipe: r } = Astro.props;
-const html = render(r.sections['Details for building']);
+const html = wordTerms(r.parsed?.words).render(r.sections['Details for building']);
 const summaryLine = modelSummary(r);
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const pageUrl = `${site}/r/${r.id}/build`;

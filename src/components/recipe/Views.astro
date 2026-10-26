@@ -1,10 +1,12 @@
 ---
 import type { Framed, ViewRow } from '../../lib/recipes';
-import { render, renderInline } from '../../lib/markdown';
+import type { Terms } from '../../lib/terms';
+import { sentence } from '../../lib/markdown';
 
-interface Props { views: Framed<ViewRow> }
-const { views } = Astro.props;
-// Consecutive views opened at the same moment share one When cell.
+interface Props { views: Framed<ViewRow>; terms: Terms }
+const { views, terms } = Astro.props;
+const { render, renderInline, strong } = terms;
+// Consecutive views opened at the same moment share one cadence line.
 const groups: { when: string; rows: ViewRow[] }[] = [];
 for (const row of views.items) {
   const last = groups[groups.length - 1];
@@ -13,22 +15,16 @@ for (const row of views.items) {
 }
 ---
 {views.intro && <div class="lede" set:html={render(views.intro)} />}
-<div class="tbl stack">
-  <table class="views">
-    <thead>
-      <tr><th scope="col">When</th><th scope="col">View</th><th scope="col">The question it answers</th></tr>
-    </thead>
-    <tbody>
-      {groups.map((g, gi) =>
-        g.rows.map((row, i) => (
-          <tr>
-            {i === 0 && <td class:list={['when', { last: gi === groups.length - 1 }]} rowspan={g.rows.length} set:html={renderInline(g.when)} />}
-            <th scope="row" class="name">{row.view && <Fragment set:html={renderInline(row.view)} />}{row.kind && <span class="kind"> {row.kind}</span>}</th>
-            <td set:html={renderInline(row.answers)} />
-          </tr>
-        )),
-      )}
-    </tbody>
-  </table>
+<div class="looks">
+  {groups.map((g) => (
+    <div class="look">
+      {g.when && <p class="cadence" set:html={renderInline(g.when)} />}
+      <ul>
+        {g.rows.map((row) => (
+          <li>{row.view && <Fragment set:html={strong(row.view)} />}{row.kind && <span class="kind"> {row.kind}</span>}{row.answers && <Fragment set:html={`${row.view || row.kind ? ' <span class="sep">—</span> ' : ''}${renderInline(sentence(row.answers))}`} />}</li>
+        ))}
+      </ul>
+    </div>
+  ))}
 </div>
 {views.outro && <Fragment set:html={render(views.outro)} />}

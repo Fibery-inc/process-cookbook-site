@@ -54,7 +54,7 @@ Claude: Customize → Connectors → Add custom connector, URL `https://<your de
 
 ## Layout
 
-- `scripts/fetch-recipes.mjs`: clones the cookbook, parses headers and sections, writes the JSON files (git-ignored). It also parses the parts the recipe page draws (the steps, the views, rules and promises tables, the questions, the words, reading times) into each recipe's `parsed`; a part that doesn't match the format is `null`, and the page shows that section's Markdown instead.
+- `scripts/fetch-recipes.mjs`: clones the cookbook, parses headers and sections, writes the JSON files (git-ignored). It also parses the parts the recipe page draws (the steps, the views, rules and promises, the questions, the words, reading times) into each recipe's `parsed`; a part that doesn't match the format is `null`, and the page shows that section's Markdown instead.
 - `src/lib/search.ts`: the MiniSearch index, used in the browser and on the server.
 - `src/lib/catalog.ts`: what the REST routes and the MCP tools share.
 - `src/pages/mcp.ts`: the MCP server, on [mcp-handler](https://www.npmjs.com/package/mcp-handler).

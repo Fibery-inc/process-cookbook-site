@@ -1,9 +1,10 @@
 ---
 import type { Framed, Step } from '../../lib/recipes';
-import { render, renderInline } from '../../lib/markdown';
+import type { Terms } from '../../lib/terms';
 
-interface Props { steps: Framed<Step> }
-const { steps } = Astro.props;
+interface Props { steps: Framed<Step>; terms: Terms }
+const { steps, terms } = Astro.props;
+const { render, renderInline } = terms;
 const plain = (md: string) => md.replace(/[*_`]/g, '');
 ---
 {steps.intro && <div class="lede" set:html={render(steps.intro)} />}

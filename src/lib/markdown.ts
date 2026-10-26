@@ -20,6 +20,9 @@ export function renderInline(md: string) {
   return marked.parseInline(md) as string;
 }
 
+// The parsed table cells drop their final period; text set as prose gets it back.
+export const sentence = (s: string) => (/[.?!]["”’)*_]*$/.test(s.trim()) ? s.trim() : `${s.trim()}.`);
+
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

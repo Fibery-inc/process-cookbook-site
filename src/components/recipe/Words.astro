@@ -1,17 +1,14 @@
 ---
-import { renderInline } from '../../lib/markdown';
+import type { Terms } from '../../lib/terms';
 
-interface Props { words: { name: string; definition: string }[] }
-const { words } = Astro.props;
+interface Props { terms: Terms }
+const { terms } = Astro.props;
 ---
-<div class="words">
-  <p class="eyebrow">The words</p>
-  <dl>
-    {words.map((w) => (
-      <div>
-        <dt>{w.name}</dt>
-        {w.definition && <dd set:html={renderInline(w.definition)} />}
-      </div>
-    ))}
-  </dl>
-</div>
+<dl class="words">
+  {terms.words.map((w) => (
+    <div>
+      <dt class={`term w${w.color}`}>{w.name}</dt>
+      {w.definition && <dd set:html={terms.renderInline(w.definition)} />}
+    </div>
+  ))}
+</dl>

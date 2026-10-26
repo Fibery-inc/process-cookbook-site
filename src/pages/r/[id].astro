@@ -9,6 +9,7 @@ import Words from '../../components/recipe/Words.astro';
 import Toc, { type TocEntry } from '../../components/recipe/Toc.astro';
 import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel, HUMAN_SECTIONS, sectionId, promiseParts, modelSummary } from '../../lib/recipes';
 import { render, renderInline } from '../../lib/markdown';
+import { wordTerms } from '../../lib/terms';
 import { TOOLS, allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 
 export function getStaticPaths() {
@@ -17,9 +18,10 @@ export function getStaticPaths() {
 const { recipe: r } = Astro.props;
 const p = r.parsed;
 const minutes = p?.minutes ?? { sections: {} as Record<string, number>, human: 0, model: 0 };
+const terms = wordTerms(p?.words);
 
 const sections = HUMAN_SECTIONS.filter((h) => r.sections[h]).map((h) => ({ h, id: sectionId(h) }));
-const details = r.sections['Details for building'] ? render(r.sections['Details for building']) : '';
+const details = r.sections['Details for building'] ? terms.render(r.sections['Details for building']) : '';
 const sources = r.sections['Sources'] ? render(r.sections['Sources']) : '';
 const { bold, rest } = promiseParts(r);
 const creditHtml = r.footer ? render(r.footer) : '';
@@ -29,9 +31,10 @@ const relatedAll = [...related, ...fallback];
 const stepsFold = !!p?.steps?.items.some((s) => s.detail);
 const summaryLine = modelSummary(r);
 const modelLine = `The model for builders and agents${summaryLine ? `: ${summaryLine}` : ''}.${minutes.model ? ` ${minutes.model} min;` : ''} the story above is enough to run the process.`;
-const facts = [r.roles, r.needs].filter(Boolean).length + (minutes.human ? 1 : 0);
+const facts = [r.roles, r.needs].filter(Boolean).length;
 
 const toc: TocEntry[] = [
+  ...(terms.words.length ? [{ id: 'the-words', label: 'The words' }] : []),
   ...sections.map(({ h, id }) => ({ id, label: h, minutes: minutes.sections[h] })),
   ...(details ? [{ id: 'details-for-building', label: 'Details for building', minutes: minutes.model, folded: true }] : []),
   ...(sources ? [{ id: 'sources', label: 'Sources' }] : []),
@@ -76,7 +79,6 @@ const notes: Record<string, string> = {
       <div class="tag-row">
         <a class="tag" data-domain={r.domain} href={`/d/${r.domain}`}>{r.domain}</a>
         <span class="tag plain">{FOR_LABELS[r.for] || r.for}</span>
-        {minutes.human > 0 && <span class="read-short">{minutes.human} min</span>}
       </div>
       <h1>{r.title}</h1>
       <p class="promise">
@@ -84,22 +86,15 @@ const notes: Record<string, string> = {
         {rest && <span class="rest" set:html={' ' + renderInline(rest)} />}
       </p>
       {facts > 0 && (
-        <div class:list={['facts', { 'time-only': !r.roles && !r.needs }]} style={`--facts: ${facts}`}>
+        <div class="facts" style={`--facts: ${facts}`}>
           {r.roles && (
-            <div class="fact"><p class="label">Who runs it</p><p class="text" set:html={renderInline(r.roles)} /></div>
+            <div class="fact"><p class="label">Who runs it</p><p class="text" set:html={terms.renderInline(r.roles)} /></div>
           )}
           {r.needs && (
-            <div class="fact"><p class="label">What you need</p><p class="text" set:html={renderInline(r.needs)} /></div>
-          )}
-          {minutes.human > 0 && (
-            <div class="fact fact-time">
-              <p class="label">Reading time</p>
-              <p class="text"><strong>{minutes.human} min</strong> for the story and the choices.{minutes.model > 0 && ` The model for builders adds ${minutes.model}, and stays folded until you open it.`}</p>
-            </div>
+            <div class="fact"><p class="label">What you need</p><p class="text" set:html={terms.renderInline(r.needs)} /></div>
           )}
         </div>
       )}
-      {p?.words && <Words words={p.words} />}
       <p class="meta">
         <span>Updated {formatDate(r.updated)}</span>
         <a class="gh" href={r.github}>
@@ -113,6 +108,13 @@ const notes: Record<string, string> = {
 
   <div class="wrap recipe-body">
     <article class="article">
+      {terms.words.length > 0 && (
+        <section id="the-words" class="part">
+          <h2>The words</h2>
+          <Words terms={terms} />
+        </section>
+      )}
+
       {sections.map(({ h, id }) => (
         <section id={id} class="part">
           {h === 'How it runs' && p?.steps && stepsFold ? (
@@ -124,17 +126,17 @@ const notes: Record<string, string> = {
             <h2>{h}</h2>
           )}
           {h === 'How it runs' && p?.steps ? (
-            <Steps steps={p.steps} />
+            <Steps steps={p.steps} terms={terms} />
           ) : h === 'What people look at' && p?.views ? (
-            <Views views={p.views} />
+            <Views views={p.views} terms={terms} />
           ) : h === 'The rules' && p?.rules ? (
-            <Rules rules={p.rules} />
+            <Rules rules={p.rules} terms={terms} />
           ) : h === 'What must stay true' && p?.promises ? (
-            <Promises promises={p.promises} />
+            <Promises promises={p.promises} terms={terms} />
           ) : h === 'Making it yours' && p?.questions ? (
-            <Choices questions={p.questions} adaptations={p.adaptations} claudeUrl={claudeUrl} />
+            <Choices questions={p.questions} adaptations={p.adaptations} claudeUrl={claudeUrl} terms={terms} />
           ) : (
-            <Fragment set:html={render(r.sections[h])} />
+            <Fragment set:html={terms.render(r.sections[h])} />
           )}
         </section>
       ))}

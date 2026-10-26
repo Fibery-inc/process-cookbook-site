@@ -166,21 +166,15 @@ button { font: inherit; }
 .crumbs a { color: var(--ink-2); }
 .crumbs .here { color: var(--ink); }
 .tag-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.read-short { display: none; margin-left: auto; font-size: 12px; color: var(--ink-2); }
 .title-block h1 { font-size: clamp(32px, 4.5vw, 48px); line-height: 1.08; letter-spacing: -0.025em; }
 .title-block .promise { max-width: 760px; font-size: 20px; line-height: 1.5; }
 .title-block .promise strong { font-weight: 600; }
 .title-block .promise .rest { color: var(--ink-2); }
-.facts { display: grid; grid-template-columns: repeat(var(--facts, 3), minmax(0, 368px)); gap: 16px; margin-top: 8px; }
+.facts { display: grid; grid-template-columns: repeat(var(--facts, 2), minmax(0, 368px)); gap: 16px; margin-top: 8px; }
 .fact { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.07); border-radius: 12px; }
 .fact .label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 .fact .text { font-size: 15px; line-height: 1.5; }
 .fact strong { font-weight: 600; }
-.words { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.words dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; max-width: 1040px; }
-.words dl > div { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.words dt { display: inline-block; padding: 3px 11px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.09); border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1.4; }
-.words dd { margin: 0; padding-left: 2px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 .meta { font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
 .meta .gh { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 500; }
 
@@ -214,6 +208,24 @@ button { font: inherit; }
 details[open] > summary .when-closed { display: none; }
 details[open] > summary .when-open { display: inline; }
 
+/* The words: one color per kind of record, wherever the page names it. Tints differ in lightness as well as hue. */
+.w0 { --term-bg: #dbe9fe; --term-ink: #0b4a8a; --term-line: #93bdf0; }
+.w1 { --term-bg: #c4ebd1; --term-ink: #0c4d2b; --term-line: #7cc497; }
+.w2 { --term-bg: #fdf3cf; --term-ink: #664800; --term-line: #e6c870; }
+.w3 { --term-bg: #d9cefa; --term-ink: #3d2585; --term-line: #a48ce8; }
+.w4 { --term-bg: #dcf7f2; --term-ink: #0b5a53; --term-line: #8fd6cb; }
+.w5 { --term-bg: #fbd9e8; --term-ink: #8a1f5c; --term-line: #eea2c6; }
+.w6 { --term-bg: #fdcda6; --term-ink: #7a3600; --term-line: #ec9d5f; }
+.w7 { --term-bg: #d8dee7; --term-ink: #2c3a4e; --term-line: #9eabbe; }
+.term { padding: 1px 0.3em; border-radius: 4px; background: var(--term-bg); color: var(--term-ink); font-weight: 600; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.article h3 > .term { padding: 2px 10px; border-radius: 8px; }
+.words { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 32px; }
+.words > div { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.words dt.term { display: inline-block; padding: 3px 11px; border: 1px solid var(--term-line); border-radius: 999px; font-size: 14px; line-height: 1.4; }
+.words dd { margin: 0; padding-left: 2px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) :is(rect, path, polygon) { fill: var(--term-bg) !important; stroke: var(--term-line) !important; }
+pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var(--term-ink) !important; }
+
 /* How it runs: the timeline */
 .article .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .article .timeline > li { display: flex; gap: 18px; margin: 0; }
@@ -233,22 +245,18 @@ details[open] > summary .when-open { display: inline; }
 .timeline .detail p { margin: 0 0 10px; }
 .timeline .detail > :last-child { margin-bottom: 0; }
 
-/* The tables: views, rules, promises */
-.tbl { overflow-x: auto; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px; margin: 0 0 16px; }
-.article .tbl table { display: table; width: 100%; margin: 0; border: 0; border-radius: 0; background: none; overflow: visible; font-size: 15px; line-height: 1.45; }
-.article .tbl th, .article .tbl td { padding: 12px 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.06); }
-.article .tbl thead th { border-bottom-color: rgba(0, 0, 0, 0.08); }
-.article .tbl tbody th { color: var(--ink); font-size: inherit; text-transform: none; letter-spacing: 0; font-weight: 600; }
-.article .tbl tbody tr:last-child > *, .article .tbl .last { border-bottom: 0; }
-.article .tbl .when, .article .tbl .kept { color: var(--ink-2); }
-.views thead th:nth-child(1), .views thead th:nth-child(2) { width: 24%; }
-.rules thead th:nth-child(1) { width: 22%; }
-.rules thead th:nth-child(2) { width: 30%; }
-.rules.no-when thead th:nth-child(1) { width: 26%; }
-.rules.no-when thead th:nth-child(2) { width: auto; }
-.promises thead th:nth-child(1) { width: 52%; }
-.promises .more { font-weight: 400; }
-.views .kind { font-weight: 400; color: var(--ink-3); }
+/* The lists: views by cadence, rules, promises */
+.looks { display: flex; flex-direction: column; gap: 18px; margin: 0 0 16px; }
+.article .cadence { margin: 0 0 6px; font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.article .looks ul, .article .rule-list, .article .promise-list { list-style: none; margin: 0; padding: 0; }
+.article .looks ul { display: flex; flex-direction: column; gap: 6px; }
+.article .looks li, .article .rule-list li, .article .promise-list li { margin: 0; font-size: 16px; line-height: 1.55; }
+.looks .kind, .looks .sep { color: var(--ink-3); }
+.article .rule-list, .article .promise-list { display: flex; flex-direction: column; gap: 14px; margin: 0 0 16px; }
+.article .rule-list p, .article .promise-list p { margin: 0; }
+.article .rule-list .rule-name { margin-bottom: 2px; }
+.rule-list .trigger, .promise-list .kept { color: var(--ink-2); }
+.article .promise-list .kept { margin-top: 3px; font-size: 15px; line-height: 1.5; }
 .core { display: inline-block; margin-right: 8px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.3; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 1px; background: var(--cream); color: #9a4b00; }
 
 /* Making it yours */
@@ -262,7 +270,7 @@ details[open] > summary .when-open { display: inline; }
 .q-pick { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; }
 .q-pick button { min-height: 34px; max-width: 280px; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; line-height: 1.3; text-align: left; cursor: pointer; background: #fff; color: var(--ink); border: 1px solid rgba(0, 0, 0, 0.14); }
 .q-pick button:hover { background: #f7f3ee; }
-.q-pick button[aria-pressed='true'] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.q-pick button[aria-pressed='true'] { background: #dcf3e4; color: #0b5a30; border-color: #2f8a55; box-shadow: inset 0 0 0 1px #2f8a55; }
 .choices-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 12px 18px; background: var(--cream-2); font-size: 14px; line-height: 1.45; }
 .choices-foot span { color: var(--ink-2); }
 .choices-foot a { font-weight: 500; }
@@ -355,20 +363,17 @@ details[open] > summary .when-open { display: inline; }
 @media (max-width: 640px) {
   .title-block .wrap { padding-top: 20px; padding-bottom: 20px; gap: 12px; }
   .title-block .crumbs { display: none; }
-  .read-short { display: inline; }
   .title-block h1 { font-size: 32px; line-height: 1.1; }
   .title-block .promise { font-size: 16px; }
   .facts { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 0; padding: 14px 16px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.07); border-radius: 12px; }
   .fact { display: block; padding: 0; border: 0; background: none; }
-  .facts.time-only, .facts .fact-time { display: none; }
   .fact .label { display: inline; margin-right: 0.3em; font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--ink); }
   .fact .label::after { content: '.'; }
   .fact .text { display: inline; font-size: 14px; }
-  .words { gap: 8px; margin-top: 0; }
-  .words dl { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .words dl > div { display: block; }
-  .words dt { margin-right: 6px; padding: 2px 9px; font-size: 12px; }
-  .words dd { display: inline; padding: 0; font-size: 13px; }
+  .words { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .words > div { display: block; }
+  .words dt.term { margin-right: 6px; padding: 2px 9px; font-size: 13px; }
+  .words dd { display: inline; padding: 0; font-size: 14px; }
   .recipe-body { padding-top: 24px; padding-bottom: 48px; gap: 36px; }
   .recipe-body .article { gap: 36px; font-size: 16px; }
   .article h2, .article .part > h2 { font-size: 22px; }
@@ -379,16 +384,9 @@ details[open] > summary .when-open { display: inline; }
   .article .timeline h3 { font-size: 16px; }
   .article .timeline .gist { font-size: 14px; line-height: 1.5; }
   .timeline .detail { padding: 12px 14px; font-size: 14px; }
-  .tbl.stack { overflow: visible; }
-  .tbl.stack table, .tbl.stack tbody, .tbl.stack tr, .tbl.stack th, .tbl.stack td { display: block; width: auto; }
-  .article .tbl.stack table { display: block; }
-  .tbl.stack thead { display: none; }
-  .tbl.stack tr { padding: 12px 14px; border-bottom: 1px solid rgba(0, 0, 0, 0.06); }
-  .tbl.stack tbody tr:last-child { border-bottom: 0; }
-  .article .tbl.stack th, .article .tbl.stack td { padding: 0; border: 0; font-size: 14px; }
-  .tbl.stack tr > * + * { margin-top: 4px; }
-  .tbl.stack td:empty, .tbl.stack th:empty { display: none; }
-  .article .tbl.stack .views .when { margin-bottom: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+  .looks { gap: 16px; }
+  .article .looks li, .article .rule-list li, .article .promise-list li { font-size: 15px; line-height: 1.5; }
+  .article .promise-list .kept { font-size: 14px; }
   .choice { padding: 14px 16px; }
   .q-pick { width: 100%; }
   .q-pick button { flex: 1 1 0; max-width: none; min-height: 40px; }
