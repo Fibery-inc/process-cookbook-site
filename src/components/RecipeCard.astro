@@ -5,7 +5,6 @@ import { render } from '../lib/markdown';
 
 interface Props { recipe: Recipe; featured?: boolean }
 const { recipe: r, featured = false } = Astro.props;
-const sources = (r.sections['Sources'] || '').split('\n').filter((l) => l.trim().startsWith('- ')).length;
 const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
 ---
 {featured ? (
@@ -14,12 +13,11 @@ const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="tag" data-domain={r.domain}>{r.domain}</span>
         <span class="small muted">{FOR_LABELS[r.for] || r.for}</span>
-        <span class="small faint" style="margin-left: auto;">v{r.version} · {formatDate(r.updated)}</span>
+        <span class="small faint" style="margin-left: auto;">{formatDate(r.updated)}</span>
       </div>
       <h3>{r.title}</h3>
       <p class="promise" set:html={promiseHtml} />
       <p class="small muted">{r.summary}</p>
-      <p class="foot">{sources} source{sources === 1 ? '' : 's'}</p>
     </div>
     <div class="card-side">
       <slot />
@@ -30,12 +28,11 @@ const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
     <div class="card-band">
       <span class="tag" data-domain={r.domain}>{r.domain}</span>
       <span class="small muted">{FOR_LABELS[r.for] || r.for}</span>
-      <span class="ver">v{r.version}</span>
     </div>
     <div class="card-body">
       <h3>{r.title}</h3>
       <p class="promise" set:html={promiseHtml} />
-      <p class="foot">Updated {formatDate(r.updated)} · {sources} source{sources === 1 ? '' : 's'}</p>
+      <p class="foot">Updated {formatDate(r.updated)}</p>
     </div>
   </a>
 )}

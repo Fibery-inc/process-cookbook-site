@@ -13,7 +13,6 @@ const slug = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const sections = human.filter((h) => r.sections[h]).map((h) => ({ h, id: slug(h), html: render(r.sections[h]) }));
 const details = r.sections['Details for building'] ? render(r.sections['Details for building']) : '';
 const sources = r.sections['Sources'] ? render(r.sections['Sources']) : '';
-const sourcesCount = (r.sections['Sources'] || '').split('\n').filter((l) => l.trim().startsWith('- ')).length;
 const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
 const creditHtml = r.footer ? render(r.footer) : '';
 const related = byDomain(r.domain).filter((x) => x.id !== r.id).slice(0, 3);
@@ -53,7 +52,7 @@ const jsonLd = {
       <h1>{r.title}</h1>
       <p class="promise" set:html={promiseHtml} />
       <p class="meta">
-        <span>Version {r.version} · updated {formatDate(r.updated)}</span>
+        <span>Updated {formatDate(r.updated)}</span>
         <a class="gh" href={r.github}>
           <svg width="16" height="16" viewBox="0 0 16 16" role="img" aria-label="GitHub"><circle cx="4" cy="3.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="4" cy="12.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><circle cx="12" cy="5.5" r="1.8" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M4 5.3v5.4M12 7.3c0 2.2-2 3-5 3.3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
           Source and history on GitHub

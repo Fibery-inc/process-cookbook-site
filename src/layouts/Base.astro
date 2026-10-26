@@ -9,8 +9,9 @@ interface Props {
   canonical?: string;
   jsonLd?: object;
   ogType?: string;
+  hideSearch?: boolean;
 }
-const { title, description, current, canonical, jsonLd, ogType = 'website' } = Astro.props;
+const { title, description, current, canonical, jsonLd, ogType = 'website', hideSearch = false } = Astro.props;
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const url = canonical || new URL(Astro.url.pathname, Astro.site || 'https://processcookbook.org').toString();
 ---
@@ -50,11 +51,12 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site || 'https://proc
           <a href="/contribute" aria-current={current === 'contribute' ? 'page' : undefined}>Contribute</a>
         </nav>
         <div class="header-right">
-          <form action="/search" method="get" role="search">
-            <label class="sr-only" for="hq">Search a process</label>
-            <input class="input" id="hq" name="q" type="search" placeholder="Search a process…" style="height: 36px; width: 220px; font-size: 14px; border-radius: 8px;" />
-          </form>
-          <a class="btn sm" href="https://github.com/Fibery-inc/process-cookbook">GitHub</a>
+          {!hideSearch && (
+            <form action="/search" method="get" role="search">
+              <label class="sr-only" for="hq">Search a process</label>
+              <input class="input" id="hq" name="q" type="search" placeholder="Search a process…" style="height: 36px; width: 220px; font-size: 14px; border-radius: 8px;" />
+            </form>
+          )}
         </div>
       </div>
     </header>

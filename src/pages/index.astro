@@ -18,7 +18,7 @@ const jsonLd = {
   potentialAction: { '@type': 'SearchAction', target: `${Astro.site}search?q={search_term_string}`, 'query-input': 'required name=search_term_string' },
 };
 ---
-<Base title="Process Cookbook: how companies, teams and communities run things" description="An open, CC BY library of processes written in plain words, with the model to build each one in the tool you use and the sources it was written from." current="recipes" jsonLd={jsonLd}>
+<Base title="Process Cookbook: how companies, teams and communities run things" description="An open, CC BY library of processes written in plain words, with the model to build each one in the tool you use and the sources it was written from." current="recipes" jsonLd={jsonLd} hideSearch>
   <section class="hero">
     <div class="wrap">
       <p class="eyebrow warm">An open library · CC BY 4.0 · {meta.count} recipes in {domainList.length} domains</p>

@@ -48,7 +48,7 @@ const list = domains();
       const hits = search(index, text, { domain: domain || undefined, limit: 20 });
       status.textContent = hits.length ? `${hits.length} recipe${hits.length === 1 ? '' : 's'} for “${text}”` : `Nothing for “${text}” yet.`;
       results.innerHTML = hits.length
-        ? hits.map((h) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span><span>v${h.version}</span></span></a>`).join('')
+        ? hits.map((h) => `<a class="result" href="/r/${h.id}"><span class="t">${esc(h.title)}</span><span class="s">${esc(h.summary)}</span><span class="m"><span class="tag" data-domain="${esc(h.domain)}">${esc(h.domain)}</span><span>${esc(FOR[h.for] || h.for)}</span></span></a>`).join('')
         : `<div class="empty">No recipe matches yet. <a href="https://github.com/Fibery-inc/process-cookbook/issues/new?labels=recipe%20request&title=Recipe%20request%3A%20${encodeURIComponent(text)}">Request “${esc(text)}”</a> and it goes on the board, or <a href="/contribute">write it</a>.</div>`;
     }
 
