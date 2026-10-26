@@ -11,7 +11,6 @@ const html = wordTerms(r.parsed?.words).render(r.sections['Details for building'
 const summaryLine = modelSummary(r);
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const pageUrl = `${site}/r/${r.id}/build`;
-const minutes = r.parsed?.minutes.model || 0;
 ---
 <Base title={`${r.title}: details for building · Process Cookbook`} description={`The model behind ${r.title}, for builders and agents${summaryLine ? `: ${summaryLine}` : ''}.`} canonical={pageUrl}>
   <section class="title-block">
@@ -25,7 +24,7 @@ const minutes = r.parsed?.minutes.model || 0;
         <span class="rest">{summaryLine && `${summaryLine.charAt(0).toUpperCase()}${summaryLine.slice(1)}. `}The story and the choices are on the recipe page.</span>
       </p>
       <p class="meta">
-        <span>Updated {formatDate(r.updated)}{minutes > 0 && ` · ${minutes} min`}</span>
+        <span>Updated {formatDate(r.updated)}</span>
         <a href={`/r/${r.id}`}>Back to the recipe</a>
         <a href={r.github}>Source on GitHub</a>
         <a href={`/r/${r.id}.md`}>Markdown</a>

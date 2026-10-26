@@ -348,7 +348,7 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
 .toc a { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0 5px 12px; border-left: 2px solid rgba(0, 0, 0, 0.08); color: var(--ink-2); }
 .toc a:hover { color: var(--ink); text-decoration: none; border-left-color: rgba(0, 0, 0, 0.3); }
 .toc a[aria-current] { color: var(--ink); font-weight: 500; border-left-color: var(--ink); }
-.toc .min { flex: none; color: var(--ink-3); font-weight: 400; }
+.toc .folded { flex: none; color: var(--ink-3); font-weight: 400; }
 .related { display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; background: var(--cream-2); border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 12px; }
 .related a.item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
 .related a.item:hover { text-decoration: none; box-shadow: var(--shadow); }
