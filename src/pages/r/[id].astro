@@ -1,4 +1,5 @@
 ---
+import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Steps from '../../components/recipe/Steps.astro';
 import Views from '../../components/recipe/Views.astro';
@@ -43,6 +44,13 @@ const anotherToolSvg =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4.75 3h4a1.75 1.75 0 0 1 1.75 1.75v4a1.75 1.75 0 0 1-1.75 1.75h-4A1.75 1.75 0 0 1 3 8.75v-4A1.75 1.75 0 0 1 4.75 3zm10.5 0h4A1.75 1.75 0 0 1 21 4.75v4a1.75 1.75 0 0 1-1.75 1.75h-4a1.75 1.75 0 0 1-1.75-1.75v-4A1.75 1.75 0 0 1 15.25 3zm-10.5 10.5h4a1.75 1.75 0 0 1 1.75 1.75v4A1.75 1.75 0 0 1 8.75 21h-4A1.75 1.75 0 0 1 3 19.25v-4a1.75 1.75 0 0 1 1.75-1.75zm11.5.25h2v2.5h2.5v2h-2.5v2.5h-2v-2.5h-2.5v-2h2.5z"/></svg>';
 const toolSvg: Record<string, string> = { fibery: fiberySvg, airtable: airtableSvg, notion: notionSvg, lovable: lovableSvg, other: anotherToolSvg };
 const { recipe: r } = Astro.props;
+// A recipe's illustration is src/assets/heroes/<id>.png (or .jpg, .webp); without one the title block stays as it is.
+const heroes = import.meta.glob<{ default: ImageMetadata }>('../../assets/heroes/*.{png,jpg,jpeg,webp}', { eager: true });
+const hero = Object.entries(heroes).find(([path]) => path.split('/').pop()!.replace(/\.\w+$/, '') === r.id)?.[1].default;
+const HERO_ALT: Record<string, string> = {
+  'tnr-program': 'Illustration: a volunteer holds open a trap as a ginger and white cat walks out, back toward its village.',
+};
+const ogImage = hero ? (await getImage({ src: hero, width: 1200, format: 'png' })).src : undefined;
 const p = r.parsed;
 const terms = wordTerms(p?.words);
 
@@ -103,12 +111,17 @@ const notes: Record<string, string> = {
   other: 'Name your tool in the chat; the model uses words most tools can map, and the story is enough to run it on paper.',
 };
 ---
-<Base title={`${r.title}: how ${audience} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
-  <section class:list={['title-block', { 'with-facts': facts > 0 }]}>
+<Base title={`${r.title}: how ${audience} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article" ogImage={ogImage}>
+  <section class:list={['title-block', { 'with-facts': facts > 0 && !hero, 'with-art': !!hero }]}>
     <div class="wrap">
       <nav class="crumbs" aria-label="Breadcrumb">
         <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><span class="here">{r.title}</span>
       </nav>
+      {hero && (
+        <div class="hero-art">
+          <Image src={hero} alt={HERO_ALT[r.id] || ''} widths={[560, 840, 1120, 1600]} sizes="(min-width: 900px) 46vw, 100vw" format="webp" loading="eager" fetchpriority="high" />
+        </div>
+      )}
       <div class="tag-row">
         <a class="tag" data-domain={r.domain} href={`/d/${r.domain}`}>{r.domain}</a>
         <span class="tag plain">{FOR_LABELS[r.for] || r.for}</span>

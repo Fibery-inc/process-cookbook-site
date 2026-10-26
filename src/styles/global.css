@@ -186,6 +186,19 @@ button { font: inherit; }
   .with-facts .meta { grid-area: meta; margin-top: 18px; }
   .with-facts .facts { grid-area: facts; grid-template-columns: minmax(0, 1fr); align-self: start; margin-top: 18px; }
 }
+/* With an illustration it stands to the right of the title and promise, and the fact cards make a row beneath.
+   Multiply turns the drawing's white paper into the block's cream. */
+.hero-art img { display: block; width: 100%; height: auto; mix-blend-mode: multiply; }
+@media (min-width: 900px) {
+  .title-block.with-art .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 46%); grid-template-rows: auto auto auto auto 1fr auto; grid-template-areas: 'crumbs crumbs' 'tags art' 'title art' 'promise art' 'meta art' 'facts facts'; gap: 0 40px; }
+  .with-art .crumbs { grid-area: crumbs; }
+  .with-art .tag-row { grid-area: tags; margin-top: 18px; align-self: end; }
+  .with-art h1 { grid-area: title; margin-top: 18px; }
+  .with-art .promise { grid-area: promise; margin-top: 18px; }
+  .with-art .meta { grid-area: meta; margin-top: 18px; align-self: start; }
+  .with-art .hero-art { grid-area: art; align-self: center; }
+  .with-art .facts { grid-area: facts; margin-top: 28px; }
+}
 .meta { font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
 .meta .gh { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 500; }
 

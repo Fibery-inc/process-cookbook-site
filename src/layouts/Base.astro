@@ -10,8 +10,9 @@ interface Props {
   jsonLd?: object;
   ogType?: string;
   hideSearch?: boolean;
+  ogImage?: string;
 }
-const { title, description, current, canonical, jsonLd, ogType = 'website', hideSearch = false } = Astro.props;
+const { title, description, current, canonical, jsonLd, ogType = 'website', hideSearch = false, ogImage } = Astro.props;
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const url = canonical || new URL(Astro.url.pathname, Astro.site || 'https://processcookbook.org').toString();
 ---
@@ -28,7 +29,8 @@ const url = canonical || new URL(Astro.url.pathname, Astro.site || 'https://proc
     <meta property="og:description" content={description} />
     <meta property="og:url" content={url} />
     <meta property="og:site_name" content="Process Cookbook" />
-    <meta name="twitter:card" content="summary" />
+    {ogImage && <meta property="og:image" content={new URL(ogImage, url).toString()} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
