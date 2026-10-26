@@ -1,0 +1,27 @@
+---
+import type { Framed, Step } from '../../lib/recipes';
+import { render, renderInline } from '../../lib/markdown';
+
+interface Props { steps: Framed<Step> }
+const { steps } = Astro.props;
+const plain = (md: string) => md.replace(/[*_`]/g, '');
+---
+{steps.intro && <div class="lede" set:html={render(steps.intro)} />}
+<ol class="timeline">
+  {steps.items.map((s, i) => (
+    <li>
+      <div class="node" aria-hidden="true"><span>{s.n ?? i + 1}</span></div>
+      <div class="step">
+        <h3 set:html={renderInline(s.title)} />
+        {s.gist && <p class="gist" set:html={renderInline(s.gist)} />}
+        {s.detail && (
+          <details>
+            <summary><span class="when-closed">More</span><span class="when-open">Less</span><span class="sr-only"> about {plain(s.title)}</span></summary>
+            <div class="detail" set:html={render(s.detail)} />
+          </details>
+        )}
+      </div>
+    </li>
+  ))}
+</ol>
+{steps.outro && <Fragment set:html={render(steps.outro)} />}

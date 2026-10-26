@@ -1,0 +1,50 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { recipes, domainLabel, formatDate, modelSummary } from '../../../lib/recipes';
+import { render } from '../../../lib/markdown';
+
+export function getStaticPaths() {
+  return recipes.filter((r) => r.sections['Details for building']).map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
+}
+const { recipe: r } = Astro.props;
+const html = render(r.sections['Details for building']);
+const summaryLine = modelSummary(r);
+const site = Astro.site?.toString().replace(/\/$/, '') || '';
+const pageUrl = `${site}/r/${r.id}/build`;
+const minutes = r.parsed?.minutes.model || 0;
+---
+<Base title={`${r.title}: details for building · Process Cookbook`} description={`The model behind ${r.title}, for builders and agents${summaryLine ? `: ${summaryLine}` : ''}.`} canonical={pageUrl}>
+  <section class="title-block">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><a href={`/r/${r.id}`}>{r.title}</a><span>/</span><span class="here">Details for building</span>
+      </nav>
+      <h1>Details for building</h1>
+      <p class="promise">
+        <strong>The model behind <a href={`/r/${r.id}`}>{r.title}</a>, for builders and agents.</strong>{' '}
+        <span class="rest">{summaryLine && `${summaryLine.charAt(0).toUpperCase()}${summaryLine.slice(1)}. `}The story and the choices are on the recipe page.</span>
+      </p>
+      <p class="meta">
+        <span>Updated {formatDate(r.updated)}{minutes > 0 && ` · ${minutes} min`}</span>
+        <a href={`/r/${r.id}`}>Back to the recipe</a>
+        <a href={r.github}>Source on GitHub</a>
+        <a href={`/r/${r.id}.md`}>Markdown</a>
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap build-page">
+    <article class="article model-content">
+      <Fragment set:html={html} />
+    </article>
+  </div>
+
+  <script>
+    if (document.querySelector('pre.mermaid')) {
+      import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(({ default: mermaid }) => {
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+        mermaid.run({ querySelector: 'pre.mermaid' });
+      });
+    }
+  </script>
+</Base>

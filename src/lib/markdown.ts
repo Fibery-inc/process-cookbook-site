@@ -16,6 +16,10 @@ export function render(md: string) {
   return marked.parse(md) as string;
 }
 
+export function renderInline(md: string) {
+  return marked.parseInline(md) as string;
+}
+
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

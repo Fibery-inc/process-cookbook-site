@@ -20,6 +20,7 @@ npm run build      # fetches, then builds to .vercel/output
 | --- | --- |
 | `/` | Home: search, recipes, collections, requested recipes, contribute |
 | `/r/<id>` | A recipe page; `/r/<id>.md` is the recipe file itself |
+| `/r/<id>/build` | The recipe's Details for building on a page of its own |
 | `/d/<domain>`, `/domains`, `/recipes`, `/collections/<id>` | Browsing |
 | `/search?q=` | Search in the browser (MiniSearch over `search-index.json`) |
 | `/api/search?q=&domain=&for=&limit=` | The same search as JSON, for agents and other sites; without `q` it lists recipes; `&debug=1` adds the matched terms |
@@ -53,7 +54,7 @@ Claude: Customize → Connectors → Add custom connector, URL `https://<your de
 
 ## Layout
 
-- `scripts/fetch-recipes.mjs`: clones the cookbook, parses headers and sections, writes the JSON files (git-ignored).
+- `scripts/fetch-recipes.mjs`: clones the cookbook, parses headers and sections, writes the JSON files (git-ignored). It also parses the parts the recipe page draws (the steps, the views, rules and promises tables, the questions, the words, reading times) into each recipe's `parsed`; a part that doesn't match the format is `null`, and the page shows that section's Markdown instead.
 - `src/lib/search.ts`: the MiniSearch index, used in the browser and on the server.
 - `src/lib/catalog.ts`: what the REST routes and the MCP tools share.
 - `src/pages/mcp.ts`: the MCP server, on [mcp-handler](https://www.npmjs.com/package/mcp-handler).

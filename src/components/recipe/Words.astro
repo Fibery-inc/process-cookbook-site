@@ -1,0 +1,17 @@
+---
+import { renderInline } from '../../lib/markdown';
+
+interface Props { words: { name: string; definition: string }[] }
+const { words } = Astro.props;
+---
+<div class="words">
+  <p class="eyebrow">The words</p>
+  <dl>
+    {words.map((w) => (
+      <div>
+        <dt>{w.name}</dt>
+        {w.definition && <dd set:html={renderInline(w.definition)} />}
+      </div>
+    ))}
+  </dl>
+</div>

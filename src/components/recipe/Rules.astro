@@ -1,0 +1,26 @@
+---
+import type { Framed, Rule } from '../../lib/recipes';
+import { render, renderInline } from '../../lib/markdown';
+
+interface Props { rules: Framed<Rule> }
+const { rules } = Astro.props;
+const hasWhen = rules.items.some((x) => x.when);
+---
+{rules.intro && <div class="lede" set:html={render(rules.intro)} />}
+<div class="tbl stack">
+  <table class:list={['rules', { 'no-when': !hasWhen }]}>
+    <thead>
+      <tr><th scope="col">Rule</th>{hasWhen && <th scope="col">When</th>}<th scope="col">What it does</th></tr>
+    </thead>
+    <tbody>
+      {rules.items.map((x) => (
+        <tr>
+          <th scope="row" class="name" set:html={renderInline(x.name)} />
+          {hasWhen && <td class="when" set:html={renderInline(x.when)} />}
+          <td set:html={renderInline(x.does)} />
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+{rules.outro && <div class="lede" set:html={render(rules.outro)} />}

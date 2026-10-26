@@ -1,0 +1,34 @@
+---
+import type { Framed, ViewRow } from '../../lib/recipes';
+import { render, renderInline } from '../../lib/markdown';
+
+interface Props { views: Framed<ViewRow> }
+const { views } = Astro.props;
+// Consecutive views opened at the same moment share one When cell.
+const groups: { when: string; rows: ViewRow[] }[] = [];
+for (const row of views.items) {
+  const last = groups[groups.length - 1];
+  if (last && row.when && last.when === row.when) last.rows.push(row);
+  else groups.push({ when: row.when, rows: [row] });
+}
+---
+{views.intro && <div class="lede" set:html={render(views.intro)} />}
+<div class="tbl stack">
+  <table class="views">
+    <thead>
+      <tr><th scope="col">When</th><th scope="col">View</th><th scope="col">The question it answers</th></tr>
+    </thead>
+    <tbody>
+      {groups.map((g, gi) =>
+        g.rows.map((row, i) => (
+          <tr>
+            {i === 0 && <td class:list={['when', { last: gi === groups.length - 1 }]} rowspan={g.rows.length} set:html={renderInline(g.when)} />}
+            <th scope="row" class="name">{row.view && <Fragment set:html={renderInline(row.view)} />}{row.kind && <span class="kind"> {row.kind}</span>}</th>
+            <td set:html={renderInline(row.answers)} />
+          </tr>
+        )),
+      )}
+    </tbody>
+  </table>
+</div>
+{views.outro && <Fragment set:html={render(views.outro)} />}

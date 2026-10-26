@@ -5,7 +5,7 @@ import { render } from '../lib/markdown';
 
 interface Props { recipe: Recipe; featured?: boolean }
 const { recipe: r, featured = false } = Astro.props;
-const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
+const promiseHtml = featured ? render(r.promise).replace(/^<p>|<\/p>\s*$/g, '') : '';
 ---
 {featured ? (
   <a class="card featured" href={`/r/${r.id}`}>
@@ -30,7 +30,7 @@ const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
     </div>
     <div class="card-body">
       <h3>{r.title}</h3>
-      <p class="promise" set:html={promiseHtml} />
+      <p class="summary">{r.summary}</p>
     </div>
   </a>
 )}

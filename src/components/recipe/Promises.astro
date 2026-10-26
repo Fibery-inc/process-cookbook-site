@@ -1,0 +1,28 @@
+---
+import type { Framed, PromiseRow } from '../../lib/recipes';
+import { render, renderInline } from '../../lib/markdown';
+
+interface Props { promises: Framed<PromiseRow> }
+const { promises } = Astro.props;
+---
+{promises.intro && <div class="lede" set:html={render(promises.intro)} />}
+<div class="tbl stack">
+  <table class="promises">
+    <thead>
+      <tr><th scope="col">Promise</th><th scope="col">Kept by</th></tr>
+    </thead>
+    <tbody>
+      {promises.items.map((x) => (
+        <tr>
+          <td class="promise">
+            {x.core && <span class="core" title="A core promise: no adaptation may break it">core</span>}
+            <strong set:html={renderInline(x.promise)} />
+            {x.more && <span class="more" set:html={' ' + renderInline(x.more)} />}
+          </td>
+          <td class="kept" set:html={renderInline(x.keptBy)} />
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+{promises.outro && <Fragment set:html={render(promises.outro)} />}

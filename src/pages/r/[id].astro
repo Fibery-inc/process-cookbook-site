@@ -1,34 +1,55 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel } from '../../lib/recipes';
-import { render } from '../../lib/markdown';
+import Steps from '../../components/recipe/Steps.astro';
+import Views from '../../components/recipe/Views.astro';
+import Rules from '../../components/recipe/Rules.astro';
+import Promises from '../../components/recipe/Promises.astro';
+import Choices from '../../components/recipe/Choices.astro';
+import Words from '../../components/recipe/Words.astro';
+import Toc, { type TocEntry } from '../../components/recipe/Toc.astro';
+import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel, HUMAN_SECTIONS, sectionId, promiseParts, modelSummary } from '../../lib/recipes';
+import { render, renderInline } from '../../lib/markdown';
+import { TOOLS, allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 
 export function getStaticPaths() {
   return recipes.map((r) => ({ params: { id: r.id }, props: { recipe: r } }));
 }
 const { recipe: r } = Astro.props;
+const p = r.parsed;
+const minutes = p?.minutes ?? { sections: {} as Record<string, number>, human: 0, model: 0 };
 
-const human = ['The idea', 'How it runs', 'What people look at', 'The rules', 'What must stay true', 'Making it yours'];
-const slug = (h: string) => h.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-const sections = human.filter((h) => r.sections[h]).map((h) => ({ h, id: slug(h), html: render(r.sections[h]) }));
+const sections = HUMAN_SECTIONS.filter((h) => r.sections[h]).map((h) => ({ h, id: sectionId(h) }));
 const details = r.sections['Details for building'] ? render(r.sections['Details for building']) : '';
 const sources = r.sections['Sources'] ? render(r.sections['Sources']) : '';
-const promiseHtml = render(r.promise).replace(/^<p>|<\/p>\s*$/g, '');
+const { bold, rest } = promiseParts(r);
 const creditHtml = r.footer ? render(r.footer) : '';
 const related = byDomain(r.domain).filter((x) => x.id !== r.id).slice(0, 3);
 const fallback = recipes.filter((x) => x.id !== r.id && x.for === r.for).slice(0, 3 - related.length);
 const relatedAll = [...related, ...fallback];
+const stepsFold = !!p?.steps?.items.some((s) => s.detail);
+const summaryLine = modelSummary(r);
+const modelLine = `The model for builders and agents${summaryLine ? `: ${summaryLine}` : ''}.${minutes.model ? ` ${minutes.model} min;` : ''} the story above is enough to run the process.`;
+const facts = [r.roles, r.needs].filter(Boolean).length + (minutes.human ? 1 : 0);
+
+const toc: TocEntry[] = [
+  ...sections.map(({ h, id }) => ({ id, label: h, minutes: minutes.sections[h] })),
+  ...(details ? [{ id: 'details-for-building', label: 'Details for building', minutes: minutes.model, folded: true }] : []),
+  ...(sources ? [{ id: 'sources', label: 'Sources' }] : []),
+  { id: 'build-it', label: 'Build it' },
+];
+
+const audience = r.for === 'community' ? 'groups' : r.for === 'company' ? 'companies' : 'teams';
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const pageUrl = `${site}/r/${r.id}`;
 const mdUrl = `${site}/r/${r.id}.md`;
-const prompt = `Set up the process described at ${mdUrl} in my tool. Read the recipe first; if I use Fibery, use the Fibery plugin.`;
-const claudeUrl = `https://claude.ai/new?q=${encodeURIComponent(prompt)}`;
-const chatgptUrl = `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`;
+const prompt = setupPrompt(null, r.title, mdUrl);
+const claudeUrl = claudeLink(prompt);
+const chatgptUrl = chatgptLink(prompt);
 const description = r.summary;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: `${r.title}: how ${r.for === 'community' ? 'groups' : r.for === 'company' ? 'companies' : 'teams'} run it`,
+  headline: `${r.title}: how ${audience} run it`,
   description,
   url: pageUrl,
   dateModified: r.updated,
@@ -38,19 +59,47 @@ const jsonLd = {
   keywords: r.keywords.join(', '),
   about: domainLabel(r.domain),
 };
+const notes: Record<string, string> = {
+  fibery: `Open Claude with the Fibery plugin, attach this recipe and say "set up ${r.title}". It asks a few questions, then builds the whole thing in about ten minutes: the databases, the views, the rules and sample records to play with.`,
+  airtable: 'Give this recipe to Claude or ChatGPT with Airtable connected. It builds the base from Details for building: one table per database with linked records, then the views. Where a custom app is described, it falls back to the view the recipe names.',
+  notion: 'Give this recipe to Claude or ChatGPT with Notion connected. Databases become Notion databases with relations and rollups; rules become reminders and templates; a custom app falls back to the view the recipe names.',
+  lovable: 'Paste this recipe into Lovable and ask for an app from Details for building: the tables, the main views as pages, the rules as app logic. Good when the group never wants to open a work tool.',
+  other: 'Give this recipe to your AI assistant and name your tool, or build it by hand from Details for building. Types, states and formulas are written in words most tools can map, and the story above is enough to run the process on paper.',
+};
 ---
-<Base title={`${r.title}: how ${r.for === 'community' ? 'groups' : r.for === 'company' ? 'companies' : 'teams'} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
+<Base title={`${r.title}: how ${audience} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
   <section class="title-block">
     <div class="wrap">
       <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><span style="color: var(--ink);">{r.title}</span>
+        <a href="/recipes">Recipes</a><span>/</span><a href={`/d/${r.domain}`}>{domainLabel(r.domain)}</a><span>/</span><span class="here">{r.title}</span>
       </nav>
-      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+      <div class="tag-row">
         <a class="tag" data-domain={r.domain} href={`/d/${r.domain}`}>{r.domain}</a>
         <span class="tag plain">{FOR_LABELS[r.for] || r.for}</span>
+        {minutes.human > 0 && <span class="read-short">{minutes.human} min</span>}
       </div>
       <h1>{r.title}</h1>
-      <p class="promise" set:html={promiseHtml} />
+      <p class="promise">
+        {bold && <strong set:html={renderInline(bold)} />}
+        {rest && <span class="rest" set:html={' ' + renderInline(rest)} />}
+      </p>
+      {facts > 0 && (
+        <div class:list={['facts', { 'time-only': !r.roles && !r.needs }]} style={`--facts: ${facts}`}>
+          {r.roles && (
+            <div class="fact"><p class="label">Who runs it</p><p class="text" set:html={renderInline(r.roles)} /></div>
+          )}
+          {r.needs && (
+            <div class="fact"><p class="label">What you need</p><p class="text" set:html={renderInline(r.needs)} /></div>
+          )}
+          {minutes.human > 0 && (
+            <div class="fact fact-time">
+              <p class="label">Reading time</p>
+              <p class="text"><strong>{minutes.human} min</strong> for the story and the choices.{minutes.model > 0 && ` The model for builders adds ${minutes.model}, and stays folded until you open it.`}</p>
+            </div>
+          )}
+        </div>
+      )}
+      {p?.words && <Words words={p.words} />}
       <p class="meta">
         <span>Updated {formatDate(r.updated)}</span>
         <a class="gh" href={r.github}>
@@ -64,72 +113,96 @@ const jsonLd = {
 
   <div class="wrap recipe-body">
     <article class="article">
-      {sections.map((s) => (
-        <section id={s.id}>
-          <h2>{s.h}</h2>
-          <Fragment set:html={s.html} />
+      {sections.map(({ h, id }) => (
+        <section id={id} class="part">
+          {h === 'How it runs' && p?.steps && stepsFold ? (
+            <div class="part-head">
+              <h2>{h}</h2>
+              <button type="button" class="pill" data-steps-toggle aria-expanded="false" hidden>Open all steps</button>
+            </div>
+          ) : (
+            <h2>{h}</h2>
+          )}
+          {h === 'How it runs' && p?.steps ? (
+            <Steps steps={p.steps} />
+          ) : h === 'What people look at' && p?.views ? (
+            <Views views={p.views} />
+          ) : h === 'The rules' && p?.rules ? (
+            <Rules rules={p.rules} />
+          ) : h === 'What must stay true' && p?.promises ? (
+            <Promises promises={p.promises} />
+          ) : h === 'Making it yours' && p?.questions ? (
+            <Choices questions={p.questions} adaptations={p.adaptations} claudeUrl={claudeUrl} />
+          ) : (
+            <Fragment set:html={render(r.sections[h])} />
+          )}
         </section>
       ))}
 
       {details && (
-        <section id="details-for-building" class="details" style="margin-top: 44px;">
-          <h2>Details for building</h2>
-          <Fragment set:html={details} />
+        <section id="details-for-building" class="model">
+          <details data-model>
+            <summary>
+              <h2>Details for building</h2>
+              <span class="btn solid sm model-toggle" aria-hidden="true"><span class="when-closed">Open the model here</span><span class="when-open">Fold the model</span></span>
+              <span class="model-line">{modelLine}</span>
+            </summary>
+            <div class="model-content">
+              <Fragment set:html={details} />
+              <button type="button" class="btn sm" data-model-fold hidden>Fold the model</button>
+            </div>
+          </details>
+          <a class="btn sm model-page" href={`/r/${r.id}/build`}>Open as its own page</a>
         </section>
       )}
 
       {sources && (
-        <section id="sources">
+        <section id="sources" class="part sources">
           <h2>Sources</h2>
           <Fragment set:html={sources} />
         </section>
       )}
 
-      <section id="build-it" class="build" style="margin-top: 44px;">
+      <section id="build-it" class="part build">
         <h2>Build it</h2>
-        <p>Pick your tool in the Run it box: Airtable, Fibery, Lovable, Notion or another one. Give this recipe to your AI assistant with that tool connected and it sets the process up from Details for building; or build it by hand from the same section.</p>
-        <p>The story above is enough to run the process without any tool at all.</p>
+        <p>Pick your tool in the Run it box and give this recipe to your AI assistant, or build it by hand from Details for building. The story above is enough to run the process without any tool at all.</p>
         {creditHtml && <div class="credit" set:html={creditHtml} />}
       </section>
     </article>
 
-    <aside class="rail">
-      <div class="runit" id="run-it">
-        <div class="head">
-          <h2>Run it in your tool</h2>
-          <span class="small faint">and more</span>
-        </div>
-        <div class="tools" role="group" aria-label="Pick a tool">
-          <button type="button" data-tool="fibery" aria-pressed="true">Fibery</button>
-          <button type="button" data-tool="airtable" aria-pressed="false">Airtable</button>
-          <button type="button" data-tool="notion" aria-pressed="false">Notion</button>
-          <button type="button" data-tool="lovable" aria-pressed="false">Lovable</button>
-          <button type="button" data-tool="other" aria-pressed="false">Another tool</button>
-        </div>
-        <p class="note" data-note="fibery">Open Claude with the Fibery plugin, attach this recipe and say "set up {r.title}". It asks a few questions, then builds the whole thing in about ten minutes: the databases, the views, the rules and sample records to play with.</p>
-        <p class="note" data-note="airtable" hidden>Give this recipe to Claude or ChatGPT with Airtable connected. It builds the base from Details for building: one table per database with linked records, then the views. Where a custom app is described, it falls back to the view the recipe names.</p>
-        <p class="note" data-note="notion" hidden>Give this recipe to Claude or ChatGPT with Notion connected. Databases become Notion databases with relations and rollups; rules become reminders and templates; a custom app falls back to the view the recipe names.</p>
-        <p class="note" data-note="lovable" hidden>Paste this recipe into Lovable and ask for an app from Details for building: the tables, the main views as pages, the rules as app logic. Good when the group never wants to open a work tool.</p>
-        <p class="note" data-note="other" hidden>Give this recipe to your AI assistant and name your tool, or build it by hand from Details for building. Types, states and formulas are written in words most tools can map, and the story above is enough to run the process on paper.</p>
-        <div class="row">
-          <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
-          <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener">With ChatGPT</a>
-        </div>
-        <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
-        <div class="links">
-          <a href={`/r/${r.id}.md`}>Copy as Markdown</a>
-          <a href={r.github}>View on GitHub</a>
-          <a href={r.raw}>Raw file</a>
+    <aside class="rail" id="rail">
+      <div class="rail-zone">
+        <div class="rail-sticky">
+          <div class="runit" id="run-it" data-md-url={mdUrl} data-title={r.title}>
+            <div class="head">
+              <h2>Run it in your tool</h2>
+              <span class="small faint">and more</span>
+            </div>
+            <div class="tools" role="group" aria-label="Pick a tool">
+              {TOOLS.map((t, i) => <button type="button" data-tool={t.id} aria-pressed={i === 0 ? 'true' : 'false'}>{t.label}</button>)}
+            </div>
+            {TOOLS.map((t, i) => <p class="note" data-note={t.id} hidden={i !== 0}>{notes[t.id]}</p>)}
+            {p?.questions && (
+              <p class="answers-box">
+                <span class="t">Your answers go with it</span>
+                <span data-answers-summary>{allDefaults(p.questions.items.length)}</span>
+                <a class="small" href="#making-it-yours">Change them in Making it yours</a>
+              </p>
+            )}
+            <div class="row">
+              <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
+              <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener">With ChatGPT</a>
+            </div>
+            <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
+            <div class="links">
+              <a href={`/r/${r.id}.md`}>Copy as Markdown</a>
+              <a href={r.github}>View on GitHub</a>
+              <a href={r.raw}>Raw file</a>
+            </div>
+          </div>
+          <Toc entries={toc} minutes={minutes.human} />
         </div>
       </div>
-
-      <nav class="toc" aria-label="On this page">
-        <p class="eyebrow" style="margin-bottom: 4px;">On this page</p>
-        {sections.map((s) => <a href={`#${s.id}`}>{s.h}</a>)}
-        {details && <a href="#details-for-building">Details for building</a>}
-        {sources && <a href="#sources">Sources</a>}
-        <a href="#build-it">Build it</a>
-      </nav>
 
       {relatedAll.length > 0 && (
         <div class="related">
@@ -143,32 +216,156 @@ const jsonLd = {
     </aside>
   </div>
 
-  <script define:vars={{ mdUrl, title: r.title }}>
-    const box = document.getElementById('run-it');
-    const prompts = {
-      fibery: `Set up "${title}" in Fibery from the recipe at ${mdUrl}: read it, ask me the few questions in Making it yours, then build it with the Fibery plugin.`,
-      airtable: `Set up "${title}" in Airtable from the recipe at ${mdUrl}: read it, then build the base from Details for building.`,
-      notion: `Set up "${title}" in Notion from the recipe at ${mdUrl}: read it, then build the databases and views from Details for building.`,
-      lovable: `Build an app for "${title}" from the recipe at ${mdUrl}: read it, then make the tables, pages and rules from Details for building.`,
-      other: `Set up "${title}" in my tool from the recipe at ${mdUrl}: read it, ask me which tool I use, then build it from Details for building.`,
-    };
-    box.querySelectorAll('.tools button').forEach((b) => {
-      b.addEventListener('click', () => {
-        const tool = b.dataset.tool;
-        box.querySelectorAll('.tools button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-        box.querySelectorAll('.note').forEach((n) => { n.hidden = n.dataset.note !== tool; });
-        const p = encodeURIComponent(prompts[tool]);
-        box.querySelector('[data-chat="claude"]').href = `https://claude.ai/new?q=${p}`;
-        box.querySelector('[data-chat="chatgpt"]').href = `https://chatgpt.com/?q=${p}`;
-      });
-    });
-  </script>
+  <div class="phone-bar">
+    <button type="button" class="pb-contents" data-open-toc aria-haspopup="dialog" aria-controls="toc-sheet" aria-label="Contents">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M4 10h8M4 15h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+    </button>
+    <label class="sr-only" for="pb-tool">Your tool</label>
+    <select id="pb-tool" class="pb-tool" data-tool-select>
+      {TOOLS.map((t) => <option value={t.id}>{t.label}</option>)}
+    </select>
+    <a class="btn solid pb-claude" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
+  </div>
+
+  <dialog id="toc-sheet" class="sheet" aria-labelledby="toc-sheet-title">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <p class="eyebrow" id="toc-sheet-title">On this page{minutes.human > 0 && ` · ${minutes.human} min`}</p>
+        <form method="dialog">
+          <button class="sheet-close" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </button>
+        </form>
+      </div>
+      <Toc entries={toc} minutes={minutes.human} heading={false} />
+    </div>
+  </dialog>
+
   <script>
-    if (document.querySelector('pre.mermaid')) {
+    import { allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
+
+    const runIt = document.getElementById('run-it');
+    const mdUrl = runIt?.dataset.mdUrl || '';
+    const title = runIt?.dataset.title || '';
+    const choices = [...document.querySelectorAll<HTMLElement>('[data-choices] .choice')];
+    const answers: ('default' | 'other')[] = choices.map(() => 'default');
+    let tool: string | null = null;
+    let answered = false;
+
+    function answersText() {
+      if (!answered) return '';
+      const lines = choices.map((c, i) => {
+        const label = c.querySelector<HTMLElement>(`[data-answer="${answers[i]}"]`)?.dataset.label || '';
+        return `${c.dataset.text} ${label}${answers[i] === 'default' ? ' (the default)' : ''}.`;
+      });
+      return `My answers to its Making it yours questions: ${lines.join(' ')}`;
+    }
+
+    function summary() {
+      const changed = choices.filter((_, i) => answers[i] === 'other').map((c) => c.dataset.change);
+      return changed.length ? `Defaults, except: ${changed.join('; ')}.` : allDefaults(choices.length);
+    }
+
+    function update() {
+      const prompt = setupPrompt(tool, title, mdUrl, answersText());
+      document.querySelectorAll<HTMLAnchorElement>('[data-chat="claude"]').forEach((a) => (a.href = claudeLink(prompt)));
+      document.querySelectorAll<HTMLAnchorElement>('[data-chat="chatgpt"]').forEach((a) => (a.href = chatgptLink(prompt)));
+      const text = summary();
+      document.querySelectorAll('[data-answers-summary]').forEach((el) => (el.textContent = text));
+    }
+
+    function pickTool(id: string) {
+      tool = id;
+      document.querySelectorAll<HTMLButtonElement>('.tools [data-tool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === id)));
+      document.querySelectorAll<HTMLElement>('[data-note]').forEach((n) => (n.hidden = n.dataset.note !== id));
+      document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => (s.value = id));
+      update();
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('.tools [data-tool]').forEach((b) => b.addEventListener('click', () => pickTool(b.dataset.tool!)));
+    document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => s.addEventListener('change', () => pickTool(s.value)));
+
+    choices.forEach((c, i) => {
+      c.querySelectorAll<HTMLButtonElement>('[data-answer]').forEach((b) =>
+        b.addEventListener('click', () => {
+          answers[i] = b.dataset.answer as 'default' | 'other';
+          answered = true;
+          c.querySelectorAll('[data-answer]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          update();
+        }),
+      );
+    });
+
+    const stepsToggle = document.querySelector<HTMLButtonElement>('[data-steps-toggle]');
+    const steps = [...document.querySelectorAll<HTMLDetailsElement>('.timeline details')];
+    if (stepsToggle && steps.length) {
+      const sync = () => {
+        const all = steps.every((d) => d.open);
+        stepsToggle.textContent = all ? 'Fold all steps' : 'Open all steps';
+        stepsToggle.setAttribute('aria-expanded', String(all));
+      };
+      stepsToggle.hidden = false;
+      stepsToggle.addEventListener('click', () => {
+        const open = !steps.every((d) => d.open);
+        steps.forEach((d) => (d.open = open));
+        sync();
+      });
+      steps.forEach((d) => d.addEventListener('toggle', sync));
+      sync();
+    }
+
+    // Mermaid can't lay out a diagram inside a closed <details>, so it loads when the model is first opened.
+    const model = document.querySelector<HTMLDetailsElement>('details[data-model]');
+    let mermaidLoaded = false;
+    function drawDiagrams(root: HTMLElement) {
+      if (mermaidLoaded || !root.querySelector('pre.mermaid')) return;
+      mermaidLoaded = true;
       import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(({ default: mermaid }) => {
         mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
-        mermaid.run({ querySelector: 'pre.mermaid' });
+        mermaid.run({ nodes: root.querySelectorAll('pre.mermaid') });
       });
+    }
+    if (model) {
+      model.addEventListener('toggle', () => model.open && drawDiagrams(model));
+      if (model.open) drawDiagrams(model);
+      const fold = model.querySelector<HTMLButtonElement>('[data-model-fold]');
+      if (fold) {
+        fold.hidden = false;
+        fold.addEventListener('click', () => {
+          model.open = false;
+          model.closest('section')?.scrollIntoView({ block: 'start' });
+        });
+      }
+    }
+
+    const sheet = document.getElementById('toc-sheet') as HTMLDialogElement | null;
+    if (sheet) {
+      document.querySelectorAll('[data-open-toc]').forEach((b) => b.addEventListener('click', () => sheet.showModal()));
+      sheet.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => sheet.close()));
+      sheet.addEventListener('click', (e) => e.target === sheet && sheet.close());
+    }
+
+    const links =[...document.querySelectorAll<HTMLAnchorElement>('.toc a[data-toc]')];
+    const targets = [...new Set(links.map((a) => a.dataset.toc!))].map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
+    const rail = document.querySelector<HTMLElement>('.rail-sticky');
+    let frame = 0;
+    function mark() {
+      frame = 0;
+      let current = targets[0]?.id;
+      for (const t of targets) if (t.getBoundingClientRect().top < 140) current = t.id;
+      links.forEach((a) => (a.dataset.toc === current ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+      // On a short screen the rail scrolls on its own; keep the marked section in sight.
+      const active = rail?.querySelector('a[aria-current]');
+      if (rail && active && rail.scrollHeight > rail.clientHeight) {
+        const a = active.getBoundingClientRect();
+        const r = rail.getBoundingClientRect();
+        if (a.bottom > r.bottom - 12) rail.scrollTop += a.bottom - r.bottom + 24;
+        else if (a.top < r.top + 12) rail.scrollTop -= r.top - a.top + 24;
+      }
+    }
+    if (targets.length) {
+      addEventListener('scroll', () => (frame ||= requestAnimationFrame(mark)), { passive: true });
+      mark();
     }
   </script>
 </Base>

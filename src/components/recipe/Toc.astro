@@ -1,0 +1,14 @@
+---
+export type TocEntry = { id: string; label: string; minutes?: number; folded?: boolean };
+interface Props { entries: TocEntry[]; minutes: number; heading?: boolean }
+const { entries, minutes, heading = true } = Astro.props;
+---
+<nav class="toc" aria-label="On this page">
+  {heading && <p class="eyebrow">On this page{minutes > 0 && ` · ${minutes} min`}</p>}
+  {entries.map((e) => (
+    <a href={`#${e.id}`} data-toc={e.id}>
+      <span>{e.label}</span>
+      {e.minutes ? <span class="min">{e.minutes} min{e.folded && ' · folded'}</span> : null}
+    </a>
+  ))}
+</nav>
