@@ -10,7 +10,7 @@ import Toc, { type TocEntry } from '../../components/recipe/Toc.astro';
 import { recipes, byDomain, FOR_LABELS, formatDate, domainLabel, HUMAN_SECTIONS, sectionId, promiseParts, modelSummary, stepFolds } from '../../lib/recipes';
 import { render, renderInline } from '../../lib/markdown';
 import { wordTerms } from '../../lib/terms';
-import { TOOLS, allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
+import { TOOLS, TOOL_KEY, FIBERY_CHATGPT_APP, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 import claudeSvg from '../../icons/claude.svg?raw';
 import chatgptSvg from '../../icons/chatgpt.svg?raw';
 
@@ -55,9 +55,18 @@ const audience = r.for === 'community' ? 'groups' : r.for === 'company' ? 'compa
 const site = Astro.site?.toString().replace(/\/$/, '') || '';
 const pageUrl = `${site}/r/${r.id}`;
 const mdUrl = `${site}/r/${r.id}.md`;
-const prompt = setupPrompt(null, r.title, mdUrl);
-const claudeUrl = claudeLink(prompt);
-const chatgptUrl = chatgptLink(prompt);
+// Every tool's links, so the inline script can show the remembered tool's before the page script loads.
+const runLinks = Object.fromEntries(
+  TOOLS.map((t) => {
+    const prompt = setupPrompt(t.id, r.title, mdUrl);
+    return [t.id, { prompt, claude: claudeLink(prompt), chatgpt: chatgptLink(setupPrompt(t.id, r.title, mdUrl, '', 'chatgpt')) }];
+  }),
+);
+const { prompt, claude: claudeUrl, chatgpt: chatgptUrl } = runLinks[TOOLS[0].id];
+const fiberyUrl = `https://fibery.com/?utm_source=processcookbook.org&utm_medium=site&utm_campaign=recipe-run-it&utm_content=${r.id}`;
+const fiberyPlugin = 'https://github.com/Fibery-inc/skills#install';
+const questionCount = p?.questions?.items.length ?? 0;
+const defaultsLine = questionCount === 1 ? 'Default for the 1 question' : `Defaults for the ${questionCount} questions`;
 const description = r.summary;
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -73,11 +82,11 @@ const jsonLd = {
   about: domainLabel(r.domain),
 };
 const notes: Record<string, string> = {
-  fibery: `Open Claude with the Fibery plugin, attach this recipe and say "set up ${r.title}". It asks a few questions, then builds the whole thing in about ten minutes: the databases, the views, the rules and sample records to play with.`,
-  airtable: 'Give this recipe to Claude or ChatGPT with Airtable connected. It builds the base from Details for building: one table per database with linked records, then the views. Where a custom app is described, it falls back to the view the recipe names.',
-  notion: 'Give this recipe to Claude or ChatGPT with Notion connected. Databases become Notion databases with relations and rollups; rules become reminders and templates; a custom app falls back to the view the recipe names.',
-  lovable: 'Paste this recipe into Lovable and ask for an app from Details for building: the tables, the main views as pages, the rules as app logic. Good when the group never wants to open a work tool.',
-  other: 'Give this recipe to your AI assistant and name your tool, or build it by hand from Details for building. Types, states and formulas are written in words most tools can map, and the story above is enough to run the process on paper.',
+  fibery: 'Claude asks a few questions, then builds it in about ten minutes: the databases, the views, the rules and sample records.',
+  airtable: 'Your assistant builds the base from Details for building: a table per database, linked records and the views.',
+  notion: 'Your assistant builds the databases with relations and rollups; the rules become reminders and templates.',
+  lovable: 'Your assistant generates an app from Details for building: the tables, the views as pages, the rules as logic.',
+  other: 'Name your tool in the chat; the model uses words most tools can map, and the story is enough to run it on paper.',
 };
 ---
 <Base title={`${r.title}: how ${audience} run it · Process Cookbook`} description={description} canonical={pageUrl} jsonLd={jsonLd} ogType="article">
@@ -185,32 +194,53 @@ const notes: Record<string, string> = {
     <aside class="rail" id="rail">
       <div class="rail-zone">
         <div class="rail-sticky">
-          <div class="runit" id="run-it" data-md-url={mdUrl} data-title={r.title}>
+          <div class="runit" id="run-it" data-md-url={mdUrl} data-title={r.title} data-tool-key={TOOL_KEY} data-links={JSON.stringify(runLinks)}>
             <h2><label for="runit-tool">Run it in your tool</label></h2>
             <select id="runit-tool" class="input runit-tool" data-tool-select>
               {TOOLS.map((t) => <option value={t.id}>{t.label}</option>)}
             </select>
-            {TOOLS.map((t, i) => <p class="note" data-note={t.id} hidden={i !== 0}>{notes[t.id]}</p>)}
-            {p?.questions && (
-              <p class="answers-box">
-                <span class="t">Your answers go with it</span>
-                <span data-answers-summary>{allDefaults(p.questions.items.length)}</span>
-                <a class="small" href="#making-it-yours">Change them in Making it yours</a>
-              </p>
-            )}
+            {TOOLS.map((t, i) => <p class="note" data-for-tool={t.id} hidden={i !== 0}>{notes[t.id]}</p>)}
+            <p class="needs" data-for-tool="fibery">Needs a <a href={fiberyUrl} target="_blank" rel="noopener">Fibery</a> workspace and the <a href={fiberyPlugin} target="_blank" rel="noopener">Fibery plugin in Claude</a>, or the <a href={FIBERY_CHATGPT_APP} target="_blank" rel="noopener">Fibery app in ChatGPT</a>, set up once.</p>
             <div class="setup">
               <p class="setup-label" id="setup-with">Set it up with</p>
               <div class="row" role="group" aria-labelledby="setup-with">
                 <a class="btn solid block" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener"><Fragment set:html={icon(claudeSvg)} />Claude</a>
                 <a class="btn block" data-chat="chatgpt" href={chatgptUrl} target="_blank" rel="noopener"><Fragment set:html={icon(chatgptSvg)} />ChatGPT</a>
               </div>
+              <div class="prompt-tools">
+                <button type="button" class="link-btn copy" data-copy-prompt aria-live="polite"><span class="idle">Copy the prompt</span><span class="done">Copied</span></button>
+                <button type="button" class="link-btn" data-show-prompt aria-expanded="false" aria-controls="runit-prompt">Show the prompt</button>
+              </div>
+              <p class="prompt-text" id="runit-prompt" hidden>{prompt}</p>
+              {p?.questions && (
+                <p class="answers-line"><span data-answers-line>{defaultsLine}</span> · <a href="#making-it-yours">change</a></p>
+              )}
             </div>
             <p class="small muted">Opens a chat with this recipe and your tool already named.</p>
             <div class="links">
-              <button type="button" class="copy-md" data-copy-md={`/r/${r.id}.md`} aria-live="polite"><span class="idle">Copy as Markdown</span><span class="done">Copied</span></button>
+              <button type="button" class="link-btn copy" data-copy-md={`/r/${r.id}.md`} aria-live="polite"><span class="idle">Copy as Markdown</span><span class="done">Copied</span></button>
               <a href={r.github}>View on GitHub</a>
             </div>
           </div>
+          <script is:inline>
+            // Shows the tool picked last time before the card is painted; the page script takes over from there.
+            (function () {
+              var card = document.getElementById('run-it');
+              var links = JSON.parse(card.dataset.links);
+              var tool = null;
+              try { tool = localStorage.getItem(card.dataset.toolKey); } catch (e) {}
+              if (!tool || !Object.prototype.hasOwnProperty.call(links, tool)) return;
+              window.__runItTool = function () {
+                var l = links[tool];
+                document.querySelectorAll('[data-tool-select]').forEach(function (s) { s.value = tool; });
+                document.querySelectorAll('[data-for-tool]').forEach(function (n) { n.hidden = n.dataset.forTool !== tool; });
+                document.querySelectorAll('[data-chat="claude"]').forEach(function (a) { a.href = l.claude; });
+                document.querySelectorAll('[data-chat="chatgpt"]').forEach(function (a) { a.href = l.chatgpt; });
+                document.getElementById('runit-prompt').textContent = l.prompt;
+              };
+              window.__runItTool();
+            })();
+          </script>
           <Toc entries={toc} />
         </div>
       </div>
@@ -237,6 +267,7 @@ const notes: Record<string, string> = {
     </select>
     <a class="btn solid pb-claude" data-chat="claude" href={claudeUrl} target="_blank" rel="noopener">Set it up with Claude</a>
   </div>
+  <script is:inline>window.__runItTool && window.__runItTool();</script>
 
   <dialog id="toc-sheet" class="sheet" aria-labelledby="toc-sheet-title">
     <div class="sheet-inner">
@@ -253,14 +284,19 @@ const notes: Record<string, string> = {
   </dialog>
 
   <script>
-    import { allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
+    import { TOOLS, TOOL_KEY, allDefaults, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 
     const runIt = document.getElementById('run-it');
     const mdUrl = runIt?.dataset.mdUrl || '';
     const title = runIt?.dataset.title || '';
     const choices = [...document.querySelectorAll<HTMLElement>('[data-choices] .choice')];
     const answers: ('default' | 'other')[] = choices.map(() => 'default');
-    let tool: string | null = null;
+    const promptText = document.getElementById('runit-prompt');
+    const showPrompt = document.querySelector<HTMLButtonElement>('[data-show-prompt]');
+    const answersLine = document.querySelector<HTMLElement>('[data-answers-line]');
+    const defaultsLine = answersLine?.textContent || '';
+    let tool = document.querySelector<HTMLSelectElement>('#runit-tool')?.value || TOOLS[0].id;
+    let prompt = '';
     let answered = false;
 
     function answersText() {
@@ -278,21 +314,63 @@ const notes: Record<string, string> = {
     }
 
     function update() {
-      const prompt = setupPrompt(tool, title, mdUrl, answersText());
+      const extra = answersText();
+      prompt = setupPrompt(tool, title, mdUrl, extra);
+      const chatgpt = chatgptLink(setupPrompt(tool, title, mdUrl, extra, 'chatgpt'));
       document.querySelectorAll<HTMLAnchorElement>('[data-chat="claude"]').forEach((a) => (a.href = claudeLink(prompt)));
-      document.querySelectorAll<HTMLAnchorElement>('[data-chat="chatgpt"]').forEach((a) => (a.href = chatgptLink(prompt)));
+      document.querySelectorAll<HTMLAnchorElement>('[data-chat="chatgpt"]').forEach((a) => (a.href = chatgpt));
+      if (promptText) promptText.textContent = prompt;
       const text = summary();
       document.querySelectorAll('[data-answers-summary]').forEach((el) => (el.textContent = text));
+      if (answersLine) {
+        const changed = choices.filter((_, i) => answers[i] === 'other').map((c) => c.dataset.change);
+        answersLine.textContent = changed.length ? `Your answers: ${changed.join(', ')}` : defaultsLine;
+      }
     }
 
     function pickTool(id: string) {
       tool = id;
-      document.querySelectorAll<HTMLElement>('[data-note]').forEach((n) => (n.hidden = n.dataset.note !== id));
+      try {
+        localStorage.setItem(TOOL_KEY, id);
+      } catch {
+        // Storage off or full: the choice lasts for this page only.
+      }
+      document.querySelectorAll<HTMLElement>('[data-for-tool]').forEach((n) => (n.hidden = n.dataset.forTool !== id));
       document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => (s.value = id));
       update();
     }
 
     document.querySelectorAll<HTMLSelectElement>('[data-tool-select]').forEach((s) => s.addEventListener('change', () => pickTool(s.value)));
+    update();
+
+    const timers = new WeakMap<HTMLElement, number>();
+    function flashCopied(button: HTMLElement) {
+      button.dataset.copied = '';
+      clearTimeout(timers.get(button));
+      timers.set(button, window.setTimeout(() => delete button.dataset.copied, 2000));
+    }
+
+    function revealPrompt(open: boolean) {
+      if (!promptText || !showPrompt) return;
+      promptText.hidden = !open;
+      showPrompt.setAttribute('aria-expanded', String(open));
+      showPrompt.textContent = open ? 'Hide the prompt' : 'Show the prompt';
+    }
+    showPrompt?.addEventListener('click', () => revealPrompt(!!promptText?.hidden));
+
+    // Without a clipboard the prompt opens, selected, for copying by hand.
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-prompt]').forEach((button) =>
+      button.addEventListener('click', async () => {
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('no clipboard');
+          await navigator.clipboard.writeText(prompt);
+          flashCopied(button);
+        } catch {
+          revealPrompt(true);
+          if (promptText) getSelection()?.selectAllChildren(promptText);
+        }
+      }),
+    );
 
     // The file is fetched as soon as someone reaches for the button: Safari allows a clipboard write only
     // within the click itself, so the text has to be ready by then. Without a clipboard, the file opens.
@@ -300,7 +378,6 @@ const notes: Record<string, string> = {
       const url = button.dataset.copyMd!;
       let file: Promise<string> | null = null;
       let text: string | null = null;
-      let timer = 0;
       const load = () =>
         (file ||= fetch(url)
           .then((res) => (res.ok ? res.text() : Promise.reject(new Error(`${res.status}`))))
@@ -314,9 +391,7 @@ const notes: Record<string, string> = {
         try {
           if (!navigator.clipboard?.writeText) throw new Error('no clipboard');
           await navigator.clipboard.writeText(text ?? (await load()));
-          button.dataset.copied = '';
-          clearTimeout(timer);
-          timer = window.setTimeout(() => delete button.dataset.copied, 2000);
+          flashCopied(button);
         } catch {
           window.open(url, '_blank', 'noopener');
         }

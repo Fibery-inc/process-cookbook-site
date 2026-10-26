@@ -329,20 +329,23 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
 .runit h2 { font-size: 18px; letter-spacing: -0.01em; }
 .runit-tool { width: 100%; padding-right: 38px; background: #fff var(--chevron) no-repeat right 14px center; appearance: none; -webkit-appearance: none; cursor: pointer; }
 .runit .note { font-size: 14px; line-height: 1.5; }
-.answers-box { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: var(--cream-2); border-radius: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
-.answers-box .t { font-weight: 600; color: var(--ink); }
-.answers-box a { font-weight: 500; }
+.runit .needs { margin-top: -6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
 .runit .setup { display: flex; flex-direction: column; gap: 6px; }
+.prompt-tools { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; font-weight: 500; }
+.prompt-text { padding: 10px 12px; background: var(--cream-2); border-radius: 8px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.answers-line { font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.answers-line a { font-weight: 500; }
 .setup-label { font-size: 13px; font-weight: 600; line-height: 1.45; color: var(--ink-2); }
 .runit .row { display: flex; gap: 8px; }
 .runit .row .btn { flex: 1 1 auto; min-width: 0; padding: 0 12px; }
 .runit .row .btn svg { flex: none; }
 .runit .links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; font-weight: 500; padding-top: 8px; border-top: 1px solid rgba(0, 0, 0, 0.06); }
-.copy-md { display: inline-grid; padding: 0; border: 0; background: none; font: inherit; color: var(--link); text-align: left; cursor: pointer; }
-.copy-md > span { grid-area: 1 / 1; }
-.copy-md .done, .copy-md[data-copied] .idle { visibility: hidden; }
-.copy-md[data-copied] .done { visibility: visible; }
-.copy-md:hover { color: var(--ink); text-decoration: underline; }
+.link-btn { padding: 0; border: 0; background: none; font: inherit; color: var(--link); text-align: left; cursor: pointer; }
+.link-btn:hover { color: var(--ink); text-decoration: underline; }
+.copy { display: inline-grid; }
+.copy > span { grid-area: 1 / 1; }
+.copy .done, .copy[data-copied] .idle { visibility: hidden; }
+.copy[data-copied] .done { visibility: visible; }
 .toc { display: flex; flex-direction: column; gap: 2px; padding: 4px 22px; font-size: 14px; }
 .toc .eyebrow { margin-bottom: 8px; }
 .toc a { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0 5px 12px; border-left: 2px solid rgba(0, 0, 0, 0.08); color: var(--ink-2); }
