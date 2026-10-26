@@ -10,10 +10,7 @@ const { render, renderInline, strong } = terms;
 {rules.intro && <div class="lede" set:html={render(rules.intro)} />}
 <ul class="rule-list">
   {rules.items.map((x) => (
-    <li>
-      <p class="rule-name"><Fragment set:html={strong(x.name)} />{x.when && <span class="trigger" set:html={' ' + renderInline(x.when)} />}</p>
-      <p set:html={renderInline(sentence(x.does))} />
-    </li>
+    <li set:html={`${strong(x.name)}${x.when ? ` <span class="trigger">(${renderInline(x.when)})</span>` : ''}: ${renderInline(sentence(x.does))}`} />
   ))}
 </ul>
 {rules.outro && <div class="lede" set:html={render(rules.outro)} />}

@@ -10,10 +10,7 @@ const { render, renderInline, strong } = terms;
 {promises.intro && <div class="lede" set:html={render(promises.intro)} />}
 <ul class="promise-list">
   {promises.items.map((x) => (
-    <li>
-      <p>{x.core && <span class="core" title="A core promise: no adaptation may break it">core</span>}<Fragment set:html={strong(sentence(x.promise)) + (x.more ? ' ' + renderInline(sentence(x.more)) : '')} /></p>
-      <p class="kept" set:html={renderInline(sentence(x.keptBy))} />
-    </li>
+    <li>{x.core && <span class="core" title="A core promise: no adaptation may break it">core</span>}<Fragment set:html={`${strong(sentence(x.promise))}${x.more ? ` ${renderInline(sentence(x.more))}` : ''} <span class="kept">${renderInline(sentence(x.keptBy))}</span>`} /></li>
   ))}
 </ul>
 {promises.outro && <Fragment set:html={render(promises.outro)} />}

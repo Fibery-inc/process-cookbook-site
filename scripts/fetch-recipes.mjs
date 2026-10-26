@@ -349,7 +349,8 @@ function parseRules(md) {
     const t = flat(it.text);
     const m = t.match(/^\*\*([^*]+?)\*\*\s*(?:\(((?:[^()]|\([^()]*\))*)\))?\s*:\s+(.+)$/) || t.match(/^\*\*([^*]+?):\*\*()\s+(.+)$/);
     if (!m) return null;
-    items.push({ name: m[1].trim(), when: cell(m[2] || ''), does: cell(m[3]) });
+    // As written, since the page sets each rule the recipe's way: "**Name** (trigger): what it does".
+    items.push({ name: m[1].trim(), when: (m[2] || '').trim(), does: m[3].trim() });
   }
   return { intro: f.intro, items, outro: f.outro };
 }

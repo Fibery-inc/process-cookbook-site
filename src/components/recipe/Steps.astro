@@ -1,28 +1,33 @@
 ---
-import type { Framed, Step } from '../../lib/recipes';
+import { stepFolds, type Framed, type Step } from '../../lib/recipes';
 import type { Terms } from '../../lib/terms';
 
 interface Props { steps: Framed<Step>; terms: Terms }
 const { steps, terms } = Astro.props;
 const { render, renderInline } = terms;
 const plain = (md: string) => md.replace(/[*_`]/g, '');
+const whole = (s: Step) => [s.gist, s.detail].filter(Boolean).join(' ').replace(/\s*\n\s*/g, ' ');
 ---
 {steps.intro && <div class="lede" set:html={render(steps.intro)} />}
 <ol class="timeline">
-  {steps.items.map((s, i) => (
-    <li>
-      <div class="node" aria-hidden="true"><span>{s.n ?? i + 1}</span></div>
-      <div class="step">
-        <h3 set:html={renderInline(s.title)} />
-        {s.gist && <p class="gist" set:html={renderInline(s.gist)} />}
-        {s.detail && (
-          <details>
-            <summary><span class="when-closed">More</span><span class="when-open">Less</span><span class="sr-only"> about {plain(s.title)}</span></summary>
-            <div class="detail" set:html={render(s.detail)} />
-          </details>
-        )}
-      </div>
-    </li>
-  ))}
+  {steps.items.map((s, i) => {
+    const folds = stepFolds(s);
+    const text = folds ? s.gist : whole(s);
+    return (
+      <li>
+        <div class="node" aria-hidden="true"><span>{s.n ?? i + 1}</span></div>
+        <div class="step">
+          <h3 set:html={renderInline(s.title)} />
+          {text && <p class="gist" set:html={renderInline(text)} />}
+          {folds && (
+            <details>
+              <summary><span class="when-closed">More</span><span class="when-open">Less</span><span class="sr-only"> about {plain(s.title)}</span></summary>
+              <div class="detail" set:html={render(s.detail)} />
+            </details>
+          )}
+        </div>
+      </li>
+    );
+  })}
 </ol>
 {steps.outro && <Fragment set:html={render(steps.outro)} />}

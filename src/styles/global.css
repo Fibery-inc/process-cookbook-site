@@ -245,18 +245,16 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
 .timeline .detail p { margin: 0 0 10px; }
 .timeline .detail > :last-child { margin-bottom: 0; }
 
-/* The lists: views by cadence, rules, promises */
-.looks { display: flex; flex-direction: column; gap: 18px; margin: 0 0 16px; }
+/* The lists: views by cadence, rules, promises, bulleted like the article's other lists */
+.looks { display: flex; flex-direction: column; gap: 16px; margin: 0 0 16px; }
 .article .cadence { margin: 0 0 6px; font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.article .looks ul, .article .rule-list, .article .promise-list { list-style: none; margin: 0; padding: 0; }
-.article .looks ul { display: flex; flex-direction: column; gap: 6px; }
-.article .looks li, .article .rule-list li, .article .promise-list li { margin: 0; font-size: 16px; line-height: 1.55; }
+.article .looks ul { margin: 0; padding-left: 22px; }
+.article .rule-list, .article .promise-list { margin: 0 0 16px; padding-left: 22px; }
+.article .looks li, .article .rule-list li, .article .promise-list li { margin: 0 0 6px; font-size: 16px; line-height: 1.55; }
+.article .rule-list li, .article .promise-list li { margin-bottom: 10px; }
+.article .looks li:last-child, .article .rule-list li:last-child, .article .promise-list li:last-child { margin-bottom: 0; }
 .looks .kind, .looks .sep { color: var(--ink-3); }
-.article .rule-list, .article .promise-list { display: flex; flex-direction: column; gap: 14px; margin: 0 0 16px; }
-.article .rule-list p, .article .promise-list p { margin: 0; }
-.article .rule-list .rule-name { margin-bottom: 2px; }
 .rule-list .trigger, .promise-list .kept { color: var(--ink-2); }
-.article .promise-list .kept { margin-top: 3px; font-size: 15px; line-height: 1.5; }
 .core { display: inline-block; margin-right: 8px; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.3; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 1px; background: var(--cream); color: #9a4b00; }
 
 /* Making it yours */
@@ -384,9 +382,8 @@ pre.mermaid .node:is(.w0, .w1, .w2, .w3, .w4, .w5, .w6, .w7) .label { color: var
   .article .timeline h3 { font-size: 16px; }
   .article .timeline .gist { font-size: 14px; line-height: 1.5; }
   .timeline .detail { padding: 12px 14px; font-size: 14px; }
-  .looks { gap: 16px; }
+  .looks { gap: 14px; }
   .article .looks li, .article .rule-list li, .article .promise-list li { font-size: 15px; line-height: 1.5; }
-  .article .promise-list .kept { font-size: 14px; }
   .choice { padding: 14px 16px; }
   .q-pick { width: 100%; }
   .q-pick button { flex: 1 1 0; max-width: none; min-height: 40px; }

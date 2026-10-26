@@ -53,6 +53,11 @@ export type Recipe = {
   text: string;
 };
 
+// A step longer than this, after its title, shows its gist and keeps the rest behind More.
+const MORE_PAST_WORDS = 60;
+const wordCount = (md: string) => md.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+export const stepFolds = (s: Step) => !!s.detail && wordCount(`${s.gist} ${s.detail}`) > MORE_PAST_WORDS;
+
 export const recipes = recipesJson as Recipe[];
 export const meta = metaJson as { commit: string; ref: string; fetchedAt: string; domains: Record<string, number>; count: number };
 
