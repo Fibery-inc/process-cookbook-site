@@ -4,6 +4,7 @@ import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import matter from 'gray-matter';
+import { addRelated } from './related.mjs';
 
 const REPO = process.env.COOKBOOK_REPO || 'https://github.com/Fibery-inc/process-cookbook.git';
 const REF = process.env.COOKBOOK_REF || 'main';
@@ -560,6 +561,8 @@ for (const domain of readdirSync(recipesDir).sort()) {
     });
   }
 }
+
+await addRelated(recipes, join(ROOT, 'node_modules/.cache/related-embeddings.json'));
 
 const domains = {};
 for (const r of recipes) domains[r.domain] = (domains[r.domain] || 0) + 1;

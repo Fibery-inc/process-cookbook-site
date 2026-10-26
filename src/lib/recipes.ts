@@ -51,6 +51,7 @@ export type Recipe = {
   footer: string;
   markdown: string;
   text: string;
+  related?: string[];
 };
 
 // A step longer than this, after its title, shows its gist and keeps the rest behind More.

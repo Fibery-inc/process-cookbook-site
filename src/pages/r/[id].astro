@@ -9,7 +9,6 @@ import Words from '../../components/recipe/Words.astro';
 import Toc, { type TocEntry } from '../../components/recipe/Toc.astro';
 import { recipes, FOR_LABELS, formatDate, domainLabel, HUMAN_SECTIONS, sectionId, promiseParts, modelSummary, stepFolds } from '../../lib/recipes';
 import { render, renderInline } from '../../lib/markdown';
-import { relatedRecipes } from '../../lib/related';
 import { wordTerms } from '../../lib/terms';
 import { TOOLS, TOOL_KEY, FIBERY_CHATGPT_APP, setupPrompt, claudeLink, chatgptLink } from '../../lib/setup';
 import claudeSvg from '../../icons/claude.svg?raw';
@@ -52,7 +51,7 @@ const details = r.sections['Details for building'] ? terms.render(r.sections['De
 const sources = r.sections['Sources'] ? render(r.sections['Sources']) : '';
 const { bold, rest } = promiseParts(r);
 const creditHtml = r.footer ? render(r.footer) : '';
-const relatedAll = relatedRecipes(r);
+const relatedAll = (r.related || []).map((id) => recipes.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x);
 const stepsFold = !!p?.steps?.items.some(stepFolds);
 const summaryLine = modelSummary(r);
 const modelLine = `The model for builders and agents${summaryLine ? `: ${summaryLine}` : ''}. The story above is enough to run the process.`;
