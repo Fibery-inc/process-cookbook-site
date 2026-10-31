@@ -43,15 +43,8 @@ const handler = createMcpHandler(
       async ({ id, part }) => {
         const r = getRecipe(id, part || 'all');
         if (!r) return { content: [{ type: 'text', text: `No recipe with id "${id}". Use find_recipes to look one up.` }], isError: true };
-        const head = [
-          `id: ${r.id}`,
-          `summary: ${r.summary}`,
-          `domain: ${r.domain} · for: ${r.for} · version: ${r.version} · updated: ${r.updated}`,
-          `keywords: ${r.keywords.join(', ')}`,
-          `url: ${r.url} · file: ${r.file} · source: ${r.source}`,
-          `license: ${r.license}`,
-        ].join('\n');
-        return { content: [{ type: 'text', text: `${head}\n\n${r.markdown}` }] };
+        const links = `id: ${r.id} · updated: ${r.updated} · url: ${r.url} · file: ${r.file} · source: ${r.source}`;
+        return { content: [{ type: 'text', text: `${r.header}\n\n${links}\n\n${r.markdown}` }] };
       },
     );
 

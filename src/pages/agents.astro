@@ -12,7 +12,7 @@ const site = Astro.site?.toString().replace(/\/$/, '') || '';
       <h2 style="font-size: 22px;">REST</h2>
       <ul>
         <li><code>GET /api/search?q=volunteer+cats&amp;domain=nonprofit&amp;limit=5</code>: ranked matches as JSON; without <code>q</code>, the recipes of a domain or of everyone; <code>&amp;debug=1</code> adds the words searched and the closest recipes by meaning with their similarity.</li>
-        <li><code>GET /api/recipes/tnr-program?part=human|model|all</code>: one recipe as JSON, with its Markdown. <code>model</code> is Details for building alone; the rules, promises and setup questions it depends on are in <code>human</code>.</li>
+        <li><code>GET /api/recipes/tnr-program?part=human|model|all</code>: one recipe as JSON, with its Markdown and the file's header verbatim. <code>model</code> is Details for building alone; the rules, promises and setup questions it depends on are in <code>human</code>.</li>
         <li><code>GET /r/tnr-program.md</code>: the recipe file itself.</li>
         <li><code>GET /api/domains</code>: domains with counts and their recipes.</li>
         <li><code>GET /llms.txt</code>: the whole library as a list an agent can read in one go.</li>

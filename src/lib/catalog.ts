@@ -90,6 +90,8 @@ export function getRecipe(id: string, part: Part = 'all') {
     summary: r.summary,
     domain: r.domain,
     for: r.for,
+    roles: r.roles || undefined,
+    needs: r.needs || undefined,
     keywords: r.keywords,
     version: r.version,
     updated: r.updated,
@@ -98,8 +100,14 @@ export function getRecipe(id: string, part: Part = 'all') {
     file: `${pageUrl(r.id)}.md`,
     source: r.github,
     part,
+    header: frontmatter(r.markdown),
     markdown,
   };
+}
+
+// The file's own header, verbatim, so an agent sees exactly what the recipe declares.
+function frontmatter(md: string) {
+  return md.match(/^---\r?\n[\s\S]*?\r?\n---/)?.[0] || '';
 }
 
 // The metadata travels in the fields above; the Markdown starts at the title.
